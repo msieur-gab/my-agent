@@ -17,7 +17,7 @@
   ],
   "invite": "Which of these sounds like yours? Or ask in your own words.",
   "placeholder": "e.g. Can we use AI and still pass GDPR?",
-  "honesty": "Answers come only from my own work. If I haven't done something, I'll say so. No cookies.",
+  "honesty": "Answers come only from my own work and views. If I haven't done something, I'll say so. No cookies.",
 
   "themes": [
     { "id": "ideas",    "label": "Ideas that never get tested", "pieces": ["senz"] },
@@ -47,6 +47,9 @@
 
   "voice": {
     "aboutLead": "{title} is about {about}",
+    "viewLead": "No project of mine answers this yet. Here is how I see it.",
+    "then": "A next question",
+    "viewInvite": "Tell me about your situation",
     "readStory": "Read the full story →",
     "readNote": "Read the note →",
     "heard": "Why this one: you mentioned",

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Build the site into public/.
 
-No dependencies. Reads content/ (site.json, work/*.md, notes/*.md, pages/*.md),
+No dependencies. Reads content/ (site.json, work/*.md, notes/*.md, views/*.md, pages/*.md),
 writes static, crawlable HTML plus answers.json, sitemap.xml, robots.txt and llms.txt.
 
     python3 build/build.py
@@ -156,6 +156,17 @@ def load_pieces(folder, kind):
     return pieces
 
 
+def load_views():
+    """My view on a common question that no project or note covers yet: what the page says, paragraph
+    by paragraph, when a visitor asks it. README.md in that folder explains how to write one."""
+    views = [p for p in load_pieces("views", "view") if p["slug"] != "README"] if (CONTENT / "views").is_dir() else []
+    for v, f in zip(views, sorted(f for f in (CONTENT / "views").glob("*.md") if f.stem != "README")):
+        body = parse_frontmatter(f.read_text(encoding="utf-8"))[1]
+        v["says"] = [" ".join(para.split()) for para in re.split(r"\n\s*\n", body.strip()) if para.strip()]
+        del v["url"]                                   # a view has no page of its own
+    return views
+
+
 # ---------------------------------------------------------------- layout
 
 def e(s):
@@ -219,7 +230,7 @@ def meta_line(p):
 
 # ---------------------------------------------------------------- pages
 
-def build_home(site, work, notes):
+def build_home(site, work, notes, views):
     by_slug = {p["slug"]: p for p in work + notes}
     # A topic only shows if at least one of its pieces is on the site.
     themes = [dict(t, pieces=[s for s in t["pieces"] if s in by_slug]) for t in site["themes"]]
@@ -233,7 +244,7 @@ def build_home(site, work, notes):
     data = {
         "site": dict({k: site[k] for k in ("partialIntro", "noMatch", "softInvite", "email", "countEndpoint",
                                            "voice", "smalltalk", "basePath")}, themes=themes),
-        "pieces": [public_piece(p) for p in work + notes],
+        "pieces": [public_piece(p) for p in work + notes + views],
     }
     data_json = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
     body = f"""
@@ -274,7 +285,7 @@ def build_home(site, work, notes):
 
 def public_piece(p):
     keep = ("slug", "type", "title", "url", "where", "year", "date", "context", "themes",
-            "intro", "about", "brief", "question", "answer", "keywords", "answers")
+            "intro", "about", "brief", "question", "answer", "keywords", "answers", "says", "next", "invite")
     out = {k: p.get(k) for k in keep if p.get(k) not in (None, "")}
     if "url" in out:
         out["url"] = BASE + out["url"]
@@ -368,26 +379,27 @@ def main():
     site = load_site()
     work = load_pieces("work", "work")
     notes = load_pieces("notes", "note")
+    views = load_views()
 
     if OUT.exists():
         shutil.rmtree(OUT)
     shutil.copytree(SRC / "assets", OUT / "assets")
 
-    write("index.html", build_home(site, work, notes))
+    write("index.html", build_home(site, work, notes, views))
     for p in work + notes:
         write(p["url"].strip("/") + "/index.html", build_piece(site, p))
     write("work/index.html", build_index(site, "Work", "Commissioned and self-initiated, each told from the question that changed it.", work, "/work/", site["themes"], True))
     write("notes/index.html", build_index(site, "Notes", "Writing, ideas and positions that feed the work.", notes, "/notes/", site["themes"], False))
     write("how-this-site-works/index.html", build_plain_page(site, "how-this-site-works"))
 
-    write("answers.json", json.dumps({"pieces": [public_piece(p) for p in work + notes]}, ensure_ascii=False, indent=1))
+    write("answers.json", json.dumps({"pieces": [public_piece(p) for p in work + notes + views]}, ensure_ascii=False, indent=1))
     urls = ["/", "/work/", "/notes/", "/how-this-site-works/"] + [p["url"] for p in work + notes]
     write("sitemap.xml", build_sitemap(site, urls))
     write("robots.txt", f"User-agent: *\nAllow: /\n\nSitemap: {site['baseUrl'].rstrip('/')}/sitemap.xml\n")
     write("llms.txt", build_llms(site, work, notes))
     write(".nojekyll", "")
 
-    print(f"Built {len(work)} work pieces, {len(notes)} notes → {OUT.relative_to(ROOT)}/")
+    print(f"Built {len(work)} work pieces, {len(notes)} notes, {len(views)} views → {OUT.relative_to(ROOT)}/")
 
 
 if __name__ == "__main__":

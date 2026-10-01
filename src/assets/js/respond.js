@@ -3,7 +3,7 @@
    from content/. Works in the browser (window.Respond) and in Node (tests).
 
    There are four templates. They all return the same shape, and chat.js shows any of them
-   the same way:
+   the same way (my view on a common question, from content/views/, is said as talk):
      { template,              'project' | 'choice' | 'talk' | 'none'
        says:  [line],         what the agent says, word by word
        why:   line,           "Why this one: you mentioned …"
@@ -11,7 +11,7 @@
        form:  { text },       the form that sends a question to me
        link:  { text, href },
        next:  { label, items },   suggestions, in the visitor's words
-       invite: true,          "Want to talk about your version of this?"
+       invite: true | line,   "Want to talk about your version of this?", or the reply's own words
        go:    href }          leave for this page once the line is said                        */
 (function (root) {
   var node = typeof module !== 'undefined' && module.exports;
@@ -25,9 +25,9 @@
     var bySlug = {};
     pieces.forEach(function (p) { bySlug[p.slug] = p; });
 
-    /* Memory, for this visit only: what was shown, what else was close, which project the talk is on. */
-    var seen, pool, focus, lastNone = -1;
-    function reset() { seen = {}; pool = []; focus = null; }
+    /* Memory, for this visit only: what was shown, what else was close, which project and which topic the talk is on. */
+    var seen, pool, focus, topic, viewed, lastNone = -1;
+    function reset() { seen = {}; pool = []; focus = null; topic = null; viewed = false; }
     reset();
 
     function unseen(list) { return list.filter(function (p) { return p && !seen[p.slug]; }); }
@@ -44,8 +44,23 @@
         says: [lead, aboutLine(p)].filter(Boolean),
         why: why || null,
         link: storyLink(p),
-        next: questions(unseen(pool).slice(0, 3), voice.also),
+        next: questions(unseen(pool).slice(0, 3), voice.also, p),
         invite: true
+      };
+    }
+
+    /* No project answers it, but I wrote my view on it: said as a view, then the question that
+       naturally follows (another view of mine), then the invitation. That it is a view and not
+       work is said once per visit, not before each one. */
+    function view(p) {
+      var then = (p.next || []).map(function (s) { return bySlug[s]; }).filter(Boolean);
+      var lead = viewed ? [] : [voice.viewLead];
+      viewed = true;
+      return {
+        template: 'talk',
+        says: lead.concat(p.says || []),
+        next: { label: voice.then, items: then.map(function (o) { return { text: o.answers[0], pick: o.slug, said: true }; }) },
+        invite: p.invite || voice.viewInvite   /* not "your version of this": there is no project to have a version of */
       };
     }
 
@@ -87,11 +102,15 @@
       return { title: p.title, meta: meta, text: p.question || '', cta: voice.open, pick: p.slug };
     }
 
-    /* Suggestions are written the way a visitor would ask them. `said` means: show it as their message. */
-    function questions(list, label) {
-      var used = {};
+    /* Suggestions are written the way a visitor would ask them. `said` means: show it as their message.
+       Of the questions a project answers, the one closest to the project just shown is offered. */
+    function questions(list, label, from) {
+      var used = {}, near = {};
+      Match.terms([from.title].concat(from.keywords || [], from.answers || []).join(' ')).forEach(function (t) { near[t] = true; });
+      function shared(a) { return Match.terms(a).filter(function (t) { return near[t]; }).length; }
       return { label: label, items: list.map(function (p) {
-        var text = (p.answers || []).filter(function (a) { return !used[a]; })[0] || p.question;
+        var text = (p.answers || []).filter(function (a) { return !used[a]; })
+          .reduce(function (best, a) { return best === null || shared(a) > shared(best) ? a : best; }, null) || p.question;
         used[text] = true;
         return { text: text, pick: p.slug, said: true };
       }) };
@@ -101,26 +120,53 @@
       return { label: label, items: site.themes.map(function (t) { return { text: t.label, theme: t.id, said: true }; }) };
     }
 
-    /* The other projects worth offering after this one: the close matches, then its topic neighbours. */
+    /* The projects listed under a topic in site.json. */
+    function inTopic(id) {
+      var t = site.themes.filter(function (x) { return x.id === id; })[0];
+      return (t ? t.pieces : []).map(function (s) { return bySlug[s]; }).filter(Boolean);
+    }
+
+    /* The other projects worth offering after this one: the close matches, then its neighbours in
+       the topic the visitor is on, or else in the first of its own topics that has other projects.
+       One topic, not every topic it touches: that is how suggestions wandered off the subject. */
     function related(p, close) {
       var list = close.filter(function (o) { return o !== p; });
-      (p.themes || []).forEach(function (t) {
-        pieces.forEach(function (o) {
-          if (o !== p && o.themes && o.themes.indexOf(t) !== -1 && list.indexOf(o) === -1) list.push(o);
-        });
-      });
+      var here = [topic].concat(p.themes || []).filter(function (id) {
+        var all = inTopic(id);
+        return all.indexOf(p) !== -1 && all.length > 1;
+      })[0];
+      inTopic(here).forEach(function (o) { if (o !== p && list.indexOf(o) === -1) list.push(o); });
       return list;
     }
 
-    /* "Why this one: you mentioned …" The visitor's own words that led to this project. */
-    function heard(text, matched) {
-      var words = [], used = {};
-      text.split(/\s+/).forEach(function (raw) {
+    /* "Why this one: you mentioned …" The visitor's own words, and only those that are keywords I
+       gave this project. A keyword of several words ("making things up") counts when its words
+       were said together, and is quoted together, never as loose everyday words. */
+    function heard(text, p) {
+      var keys = [p.title].concat(p.keywords || []).map(function (k) {
+        return { terms: Match.terms(k), as: Match.fold(k), size: k.trim().split(/\s+/).length };
+      }).filter(function (k) { return k.terms.length; });
+      var words = [];
+      text.split(/\s+/).forEach(function (raw, at) {
         var w = raw.replace(/^[^A-Za-z0-9À-ÿ]+|[^A-Za-z0-9À-ÿ]+$/g, '');
         var t = Match.terms(w)[0];
-        if (t && matched.indexOf(t) !== -1 && !used[t]) { used[t] = true; words.push(w); }
+        if (t) words.push({ w: w, t: t, at: at });
       });
-      return words.length ? voice.heard + ' ' + words.slice(0, 4).join(', ') + '.' : null;
+      var raw = text.split(/\s+/), out = [], used = {}, i = 0;
+      while (i < words.length) {
+        var n = 0, key = null;
+        keys.forEach(function (k) {
+          if (k.terms.length > n && k.terms.every(function (t, j) { return words[i + j] && words[i + j].t === t; })) { n = k.terms.length; key = k; }
+        });
+        if (!n) { i++; continue; }
+        /* quoted as the visitor wrote it: the whole keyword when they said it whole ("making things up") */
+        var whole = raw.slice(words[i].at, words[i].at + key.size).join(' ');
+        var said = (Match.fold(whole) === key.as ? whole : raw.slice(words[i].at, words[i + n - 1].at + 1).join(' '))
+          .replace(/^[^A-Za-z0-9À-ÿ]+|[^A-Za-z0-9À-ÿ]+$/g, '');
+        if (!used[said.toLowerCase()]) { used[said.toLowerCase()] = true; out.push(said); }
+        i += n;
+      }
+      return out.length ? voice.heard + ' ' + out.slice(0, 4).join(', ') + '.' : null;
     }
 
     function nothingLeft() { return talk(voice.noMore, { next: topics(voice.themesAgain) }); }
@@ -143,12 +189,14 @@
       if (v.kind === 'none') return Match.wantsList(text) ? everything() : none(text);
       var ok = v.results.filter(function (r) { return r.score >= Match.PARTIAL; });
       var top = ok[0];
+      if (top.piece.type === 'view') return view(top.piece);
+      ok = ok.filter(function (r) { return r.piece.type !== 'view'; }); /* a view is never a card, nor a suggestion after a project */
       var others = ok.slice(1).map(function (r) { return r.piece; });
 
       /* Already shown in this visit: offer the next angle, or say it's still the best one. */
       if (seen[top.piece.slug]) {
         var alt = ok.filter(function (r) { return !seen[r.piece.slug]; })[0];
-        if (alt) return project(alt.piece, voice.another, heard(text, alt.matched), others);
+        if (alt) return project(alt.piece, voice.another, heard(text, alt.piece), others);
         return talk(voice.seen.replace('{title}', top.piece.title), { link: storyLink(top.piece), invite: true });
       }
 
@@ -156,7 +204,7 @@
       var close = ok.filter(function (r) { return r.score >= Match.STRONG && r.score >= top.score * CLOSE && !seen[r.piece.slug]; });
       if (close.length > 1) return choice(voice.askBack, close.slice(0, 3).map(function (r) { return r.piece; }));
 
-      return project(top.piece, v.kind === 'answer' ? null : site.partialIntro, heard(text, top.matched), others);
+      return project(top.piece, v.kind === 'answer' ? null : site.partialIntro, heard(text, top.piece), others);
     }
 
     function small(kind) {
@@ -173,7 +221,8 @@
 
     /* A card or a suggested question was tapped, or a project was asked for by name. */
     function pick(slug) {
-      return bySlug[slug] ? project(bySlug[slug]) : nothingLeft();
+      if (!bySlug[slug]) return nothingLeft();
+      return bySlug[slug].type === 'view' ? view(bySlug[slug]) : project(bySlug[slug]);
     }
 
     /* "Open Senz", "show me" once it has been presented: say so, then go to its page. */
@@ -185,7 +234,8 @@
 
     function theme(id) {
       var t = site.themes.filter(function (x) { return x.id === id; })[0];
-      var list = (t ? t.pieces : []).map(function (s) { return bySlug[s]; }).filter(Boolean);
+      var list = inTopic(id);
+      topic = id;
       var fresh = unseen(list);
       if (!list.length) return none(t ? t.label : '');
       if (list.length === 1) return project(list[0]);

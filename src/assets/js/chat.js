@@ -62,7 +62,8 @@
         if (reply.form) o.onForm(t, reply.form.text);
         if (reply.link) t.appendChild(el('a', { class: 'follow', href: reply.link.href, text: reply.link.text }));
         if (reply.next && reply.next.items.length) t.appendChild(suggestions(reply.next, t));
-        if (reply.invite) t.appendChild(button('linkbtn', { text: o.invite, invite: true }, t));
+        /* the invitation to write to me: the usual words, or the reply's own */
+        if (reply.invite) t.appendChild(button('linkbtn', { text: reply.invite === true ? o.invite : reply.invite, invite: true }, t));
         if (reply.go) return wait(PACE.go).then(function () { location.assign(reply.go); });
       });
     }
