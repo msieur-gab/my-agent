@@ -17,10 +17,10 @@ const cases = [
   ['How do we use AI without it making things up in front of customers?', 'brainboard'],
   ['Can we have an AI that says "I don\'t know"?', 'brainboard'],
   ['our chatbot hallucinates', 'brainboard'],
-  ['Where does our personal data actually go?', 'datadraw'],
-  ['Can we use AI and still pass GDPR?', 'datadraw'],
-  ['How do we anonymise an employee list before sharing it?', 'datadraw'],
-  ['Compliance keeps saying no. What would a yes look like?', 'datadraw'],
+  ['Where does our personal data actually go?', 'autoflow'],
+  ['Can we use AI and still pass GDPR?', 'autoflow'],
+  ['How do we anonymise an employee list before sharing it?', 'autoflow'],
+  ['Compliance keeps saying no. What would a yes look like?', 'autoflow'],
   ['How can a child keep a parent\'s voice when they live apart?', 'pebbble'],
   ['my kids live abroad with their mother', 'pebbble'],
   ['How can I write to my child in a language I don\'t speak?', 'tiptap'],
@@ -35,8 +35,11 @@ const cases = [
   ['Is our use case high-risk under the AI Act?', 'any'],
 ];
 
+// Pieces moved to content/drafts/ are not on the site; their questions wait there with them.
+const onSite = new Set(data.pieces.map(p => p.slug));
+const live = list => list.filter(([, want]) => want === 'none' || want === 'any' || onSite.has(want));
 let pass = 0;
-for (const [q, want] of cases) {
+for (const [q, want] of live(cases)) {
   const v = Match.verdict(Match.search(index, q));
   const top = v.results[0];
   const got = v.kind === 'none' ? 'none' : top.piece.slug;
@@ -44,21 +47,21 @@ for (const [q, want] of cases) {
   if (ok) pass++;
   console.log(`${ok ? 'ok  ' : 'MISS'} ${v.kind.padEnd(7)} ${String(top ? top.score : 0).padStart(5)}  ${got.padEnd(24)} ← ${q}`);
 }
-console.log(`\nmatching: ${pass}/${cases.length}\n`);
+console.log(`\nmatching: ${pass}/${live(cases).length} (${cases.length - live(cases).length} questions wait for pieces still in drafts)\n`);
 
 // Typos: the same questions with slips in them must still find their piece.
 const typos = [
   ['How can my team test an idea befor we comit a budjet?', 'senz'], ['our chatbot halucinates', 'brainboard'],
-  ['Can we use AI and still pass GDRP?', 'datadraw'], ['have you worked on child abducton', 'pebbble'],
-  ['Can a toy be conected without being adictive?', 'vrooom'], ['How do we anonymize an employe list before sharing it?', 'datadraw'],
+  ['Can we use AI and still pass GDRP?', 'autoflow'], ['have you worked on child abducton', 'pebbble'],
+  ['Can a toy be conected without being adictive?', 'vrooom'], ['How do we anonymize an employe list before sharing it?', 'autoflow'],
 ];
 let typoPass = 0;
-for (const [q, want] of typos) {
+for (const [q, want] of live(typos)) {
   const v = Match.verdict(Match.search(index, q));
   const got = v.kind === 'none' ? 'none' : v.results[0].piece.slug;
   if (got === want) typoPass++; else console.log(`MISS typo ${got} (want ${want}) ← ${q}`);
 }
-console.log(`typos: ${typoPass}/${typos.length}`);
+console.log(`typos: ${typoPass}/${live(typos).length}`);
 
 // Small talk: answered as talk, and never swallowing a real question.
 const talk = [
@@ -85,16 +88,16 @@ console.log(`black holes: ${holes.length - fell.length}/${holes.length}, list re
 
 // Typed commands: the same actions as tapping a card or its link. [sentence, project in focus, expected]
 const commands = [
-  ['can you open brainboard', null, 'open brainboard'], ['Brainboard', null, 'about brainboard'],
+  ['can you open autoflow', null, 'open autoflow'], ['AutoFlow', null, 'about autoflow'],
   ['Tell me about Senz', null, 'about senz'], ['what is Pebbble?', null, 'about pebbble'],
   ['show me this project', 'senz', 'open senz'], ['open it', 'vrooom', 'open vrooom'],
-  ['read the full story', 'tiptap', 'open tiptap'], ['tell me about this one', 'senz', 'about senz'],
-  ['show me Brainboard', null, 'about brainboard'], ['show me Brainboard', 'brainboard', 'open brainboard'],
+  ['read the full story', 'dowgo', 'open dowgo'], ['tell me about this one', 'senz', 'about senz'],
+  ['show me Dowgo', null, 'about dowgo'], ['show me Dowgo', 'dowgo', 'open dowgo'],
   ['show me', 'pebbble', 'open pebbble'], ['open', 'pebbble', 'open pebbble'], ['Can you show me, please?', 'pebbble', 'open pebbble'],
   ['show me', null, 'null'],
-  ['and what about titptap', null, 'about tiptap'], ['tell me about pebble', null, 'about pebbble'], ['open vroom', null, 'open vrooom'],
-  ['what is brainbord', null, 'about brainboard'], ['tip tap', null, 'about tiptap'],
-  ['show me this project', null, 'null'], ['How does Brainboard avoid making things up?', null, 'null'],
+  ['and what about dwogo', null, 'about dowgo'], ['tell me about pebble', null, 'about pebbble'], ['open vroom', null, 'open vrooom'],
+  ['what is autoflw', null, 'about autoflow'], ['auto flow', null, 'about autoflow'],
+  ['show me this project', null, 'null'], ['How does AutoFlow score the risk of a data transfer?', null, 'null'],
 ];
 let cmdPass = 0;
 for (const [q, focus, want] of commands) {
@@ -112,18 +115,21 @@ console.log(`small talk: ${talkPass}/${talk.length}, real questions swallowed: $
 
 // The conversation, end to end: what each kind of message gets back (respond.js, one visit, in order).
 const Respond = require('../src/assets/js/respond.js');
-const site = JSON.parse(fs.readFileSync(path.join(__dirname, '../content/site.json'), 'utf8'));
-const brain = Respond.create({ site, pieces: data.pieces });
+// the page's own data: site wording, and the topics that have at least one piece on the site
+const pageData = JSON.parse(fs.readFileSync(path.join(__dirname, '../public/index.html'), 'utf8')
+  .match(/id="answers">(.*?)<\/script>/s)[1].replace(/<\\\//g, '</'));
+const siteData = pageData.site;
+const base = siteData.basePath || '';   // '' on a root domain, '/my-agent' on GitHub Pages
+const brain = Respond.create(pageData);
 const rounds = [
-  ['a topic with several projects asks back with cards', () => brain.theme('distance'), r => r.template === 'choice' && r.cards.length === 3],
-  ['picking a card presents the project', () => brain.pick('pebbble'), r => r.template === 'project' && /^Pebbble is about/.test(r.says[0]) && r.link.href === '/work/pebbble/'],
-  ['"show me" then opens it', () => brain.ask('show me'), r => r.template === 'talk' && r.go === '/work/pebbble/'],
-  ['a misspelt project name still finds it', () => brain.ask('and what about titptap'), r => r.template === 'project' && r.link.href === '/work/tiptap/'],
-  ['a topic with one project presents it', () => brain.theme('ideas'), r => r.template === 'project' && r.link.href === '/work/senz/'],
+  ['a topic with one project presents it', () => brain.theme('gdpr'), r => r.template === 'project' && /^AutoFlow is about/.test(r.says[0]) && r.link.href === base + '/work/autoflow/'],
+  ['"show me" then opens it', () => brain.ask('show me'), r => r.template === 'talk' && r.go === base + '/work/autoflow/'],
+  ['a misspelt project name still finds it', () => brain.ask('and what about dwogo'), r => r.template === 'project' && r.link.href === base + '/work/dowgo/'],
+  ['picking a card presents the project', () => brain.pick('pebbble'), r => r.template === 'project' && /^Pebbble is about/.test(r.says[0])],
+  ['a clear question says which words led to the answer', () => brain.ask('How can my team test an idea before we commit a budget?'), r => r.template === 'project' && r.link.href === base + '/work/senz/' && /idea/.test(r.why)],
   ['the same project is not presented twice', () => brain.ask('How can my team test an idea before we commit a budget?'), r => r.template === 'talk' && /still my best answer/.test(r.says[0])],
-  ['a clear question says which words led to the answer', () => brain.ask('our chatbot hallucinates'), r => r.template === 'project' && /chatbot/.test(r.why)],
-  ['"show me all your work" lists every project', () => brain.ask('show me all your work'), r => r.template === 'choice' && r.cards.length === 10],
-  ['hello is answered as talk', () => brain.ask('hello'), r => r.template === 'talk' && r.next.items.length === site.themes.length],
+  ['"show me all your work" lists every project', () => brain.ask('show me all your work'), r => r.template === 'choice' && r.cards.length === data.pieces.filter(p => p.type === 'work').length],
+  ['hello is answered as talk', () => brain.ask('hello'), r => r.template === 'talk' && r.next.items.length === siteData.themes.length],
   ['no match invites the question', () => brain.ask('Do you do logo design?'), r => r.template === 'none' && r.form.text === 'Do you do logo design?'],
   ['after "start over" a project can be presented again', () => { brain.reset(); return brain.theme('ideas'); }, r => r.template === 'project'],
 ];

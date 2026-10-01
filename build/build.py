@@ -39,7 +39,8 @@ def unquote(s):
 
 
 def parse_frontmatter(text):
-    """Small YAML subset: `key: value`, `key: [a, b]`, and `key:` followed by `  - item` lines."""
+    """Small YAML subset: `key: value`, `key: [a, b]`, `key:` followed by `  - item` lines,
+    and `questions:` followed by `  - q: …` entries with indented `see:` / `a:` lines under each."""
     meta, body = {}, text
     if text.startswith("---"):
         end = text.find("\n---", 3)
@@ -47,6 +48,15 @@ def parse_frontmatter(text):
         key = None
         for line in head.splitlines():
             if not line.strip():
+                continue
+            m = re.match(r"^\s+-\s+q:\s+(.*)$", line)
+            if m and key:                                  # a question entry starts
+                meta[key] = meta[key] if isinstance(meta[key], list) else []
+                meta[key].append({"q": unquote(m.group(1))})
+                continue
+            m = re.match(r"^\s{4,}(see|a):\s+(.*)$", line)
+            if m and key and isinstance(meta.get(key), list) and meta[key] and isinstance(meta[key][-1], dict):
+                meta[key][-1][m.group(1)] = unquote(m.group(2))    # …and takes its pointer or its answer
                 continue
             m = re.match(r"^\s+-\s+(.*)$", line)
             if m and key:
@@ -211,15 +221,18 @@ def meta_line(p):
 
 def build_home(site, work, notes):
     by_slug = {p["slug"]: p for p in work + notes}
+    # A topic only shows if at least one of its pieces is on the site.
+    themes = [dict(t, pieces=[s for s in t["pieces"] if s in by_slug]) for t in site["themes"]]
+    themes = [t for t in themes if t["pieces"]]
     chips = []
-    for t in site["themes"]:
-        first = by_slug.get(t["pieces"][0]) if t["pieces"] else None
-        href = first["url"] if first else "/work/"
+    for t in themes:
+        first = by_slug[t["pieces"][0]]
+        href = first["url"]
         chips.append(f'<a class="chip" href="{e(href)}" data-theme="{e(t["id"])}">{e(t["label"])}</a>')
 
     data = {
-        "site": {k: site[k] for k in ("themes", "partialIntro", "noMatch", "softInvite", "email", "countEndpoint",
-                                      "voice", "smalltalk", "basePath")},
+        "site": dict({k: site[k] for k in ("partialIntro", "noMatch", "softInvite", "email", "countEndpoint",
+                                           "voice", "smalltalk", "basePath")}, themes=themes),
         "pieces": [public_piece(p) for p in work + notes],
     }
     data_json = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
