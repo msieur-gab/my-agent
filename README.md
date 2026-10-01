@@ -20,6 +20,27 @@ content/site.json        opening line, themes, "no answer" replies, contact deta
 content/work/*.md        one file per project
 content/notes/*.md       one file per note
 content/pages/*.md       plain pages (how this site works)
+src/assets/js/match.js   understands what was typed: search, typos, small talk, commands
+src/assets/js/respond.js decides the reply, as one of four templates (project, choice, talk, none)
+src/assets/js/chat.js    shows a reply, always in the same order; looks after the question field
+src/assets/js/send.js    the form that reaches me
+src/assets/js/redact.js  removes names and contact details before anything is sent
+src/assets/js/intro.js   the opening lines, shown one after another
+src/assets/js/agent.js   wires the above together
+build/build.py        # builds the site into public/
+cd public && python3 -m http.server 8000
+node tests/check.js           # checks matching and redaction (after a build)
+```
+
+No dependencies. Netlify runs the same build (`netlify.toml`).
+
+## Where things live
+
+```
+content/site.json        opening line, themes, "no answer" replies, contact details
+content/work/*.md        one file per project
+content/notes/*.md       one file per note
+content/pages/*.md       plain pages (how this site works)
 src/assets/js/match.js   finds the best piece for a question (extractive, no generation)
 src/assets/js/redact.js  removes names and contact details before anything is sent
 src/assets/js/intro.js   the intro lines, shown one after another

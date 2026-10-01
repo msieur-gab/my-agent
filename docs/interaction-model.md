@@ -39,14 +39,37 @@ Everything stays extractive: every sentence the page says is written in `content
     for words of five letters or more, two for nine or more. Project names too.
 11. **It never dead-ends.** No match gives the invitation to send the question, and the topics.
 
+## The four reply templates
+
+Every reply is one of four templates, and all four are shown the same way.
+
+| Template | When | What it holds |
+|---|---|---|
+| **Project** | One project answers | "Senz is about …", the link to the full story, related questions, the invitation |
+| **Choice** | Several projects fit, or "show me all your work" | One line, then a card per project |
+| **Talk** | Hello, who are you, how this works, "opening the story" | A written line, sometimes a link, the topics or the form |
+| **No answer** | Nothing fits | The honest line, the form to send the question, the topics |
+
+Shown in this order, whatever the template:
+what the agent says → why ("you mentioned …") → cards → form → link → what to do next → the invitation.
+
+## How the code is split
+
+- `match.js` understands what was typed: search with an evidence rule, typos, small talk, commands.
+- `respond.js` decides the reply and returns it as plain data, one of the four templates. No page code,
+  so `tests/check.js` runs whole conversations against it.
+- `chat.js` shows any reply in the fixed order above and looks after the question field. It knows
+  nothing about the content.
+- `send.js` is the form. `intro.js` is the opening. `agent.js` wires them together.
+
+A new kind of answer is a new template function in `respond.js`; the look stays in one place, `chat.js`.
+
 ## Open
 
+- **Questions about me** (where I'm based, my process, my rate…): 44 listed in `questions.md`, section L,
+  to mark as answer / invite / no.
 - **Content written for speech.** Each field of a piece should complete a sentence the agent says
   (`about:` completes "Senz is about …"), saying in a few words how the project relates to the
   visitor's problem, just enough to lead to the full story. Guidelines for the frontmatter to define.
-- **The full answer** (brief, question nobody asked, answer) still appears as a labelled card when a
-  typed question matches one piece. Speech or card: not decided.
 - **How the reply appears**: word by word today. Pace and form not decided.
-- **Code structure**: `agent.js` holds everything. A split into "what to say" and "how it is shown"
-  was sketched and not adopted.
 - All wording under `voice` and `smalltalk` in `site.json` is a draft for Gab to rewrite.

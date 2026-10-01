@@ -100,11 +100,7 @@ h1 { margin: 0; font-weight: 500; font-size: clamp(36px, 5.6vw, 60px); line-heig
 .say { margin: 0; font-size: 19px; }
 .say .w { opacity: 0; transition: opacity .25s ease; }
 .say .w.on { opacity: 1; }
-.heard { margin: -8px 0 0; font-size: 14px; color: var(--muted); opacity: 0; transition: opacity .45s ease; }
-.heard.on { opacity: 1; }
-.heard .kw { color: var(--fg); }
-.card { display: flex; flex-direction: column; gap: 18px; padding-top: 22px; border-top: 1px solid var(--faint); opacity: 0; transform: translateY(6px); transition: opacity .45s ease, transform .45s ease; }
-.card.on { opacity: 1; transform: none; }
+.heard { margin: -6px 0 0; font-size: 14px; color: var(--muted); }
 .where { margin: 0; color: var(--muted); font-size: 15px; }
 .step { display: flex; flex-direction: column; gap: 4px; }
 .label { font-size: 13px; color: var(--muted); letter-spacing: 0.04em; }
@@ -114,9 +110,10 @@ h1 { margin: 0; font-weight: 500; font-size: clamp(36px, 5.6vw, 60px); line-heig
 .follow { font-size: 16px; }
 .more { display: flex; flex-direction: column; gap: 10px; }
 .more .label { margin: 0; }
-.actions { display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; }
 .linkbtn { font: inherit; font-size: 16px; color: var(--link); background: none; border: 0; padding: 0; min-height: 44px; cursor: pointer; text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; }
-.restart { align-self: flex-start; color: var(--muted); }
+.turn > .linkbtn, .turn > .follow { align-self: flex-start; }
+.restart { color: var(--muted); }
+.thread:empty + .restart-wrap { display: none; }
 
 /* several pieces to choose from: cards side by side, swiped left and right */
 .deck-wrap { display: flex; flex-direction: column; gap: 12px; }
@@ -137,8 +134,7 @@ h1 { margin: 0; font-weight: 500; font-size: clamp(36px, 5.6vw, 60px); line-heig
 @media (pointer: coarse) { .deck-nav { display: none; } } /* fingers swipe */
 
 /* send form */
-.send { display: flex; flex-direction: column; gap: 16px; padding: 22px; background: var(--surface); border: 1px solid var(--faint); opacity: 0; transition: opacity .45s ease; }
-.send.on { opacity: 1; }
+.send { display: flex; flex-direction: column; gap: 16px; padding: 22px; background: var(--surface); border: 1px solid var(--faint); border-radius: 16px; }
 .send label { display: block; font-size: 13px; color: var(--muted); letter-spacing: 0.04em; margin-bottom: 4px; }
 .send textarea, .send input[type="email"] { width: 100%; font: inherit; font-size: 18px; color: var(--fg); background: transparent; border: 0; border-bottom: 1px solid var(--muted); border-radius: 0; padding: 8px 0; }
 .send textarea { resize: vertical; min-height: 72px; }
@@ -181,7 +177,7 @@ h1 { margin: 0; font-weight: 500; font-size: clamp(36px, 5.6vw, 60px); line-heig
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .say .w, .card, .heard, .send { transition: none; }
+  .say .w { transition: none; }
   .turn > * { animation: none; }
   .pick { transition: none; }
 }

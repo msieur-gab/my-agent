@@ -46,19 +46,21 @@
   "softInvite": "Want to talk about your version of this?",
 
   "voice": {
-    "leadBrief": "The brief said:",
-    "leadView": "The usual view:",
-    "leadQuestion": "The question nobody asked:",
-    "fallbackIntro": "This is what I have on that.",
+    "aboutLead": "{title} is about {about}",
+    "readStory": "Read the full story →",
+    "readNote": "Read the note →",
     "heard": "Why this one: you mentioned",
+    "also": "Also on this",
     "askBack": "I have a few pieces on that. Which is closest to your situation?",
     "open": "Show me →",
-    "aboutLead": "{title} is about {about}",
-    "opening": "Here is the full story of {title}.",
     "another": "Another angle on that.",
     "seen": "{title} is still my best answer to that.",
     "noMore": "That's everything I have on this for now.",
-    "themesAgain": "Or start from one of these."
+    "themesAgain": "Or start from one of these.",
+    "opening": "Here is the full story of {title}.",
+    "all": "Here is all of it. Swipe through, or pick one.",
+    "allLink": "See everything as a list →",
+    "howLink": "How this site works →"
   },
 
   "smalltalk": {

@@ -164,6 +164,94 @@ Working log for the "ask me" landing page. Started 1 October 2026.
 
 ---
 
+## L. Questions about me and how I work
+*Found on 1 October 2026 while testing the conversation: visitors ask about the person, not only about problems.*
+
+"Invitation" means the page says it has no answer and invites the visitor to send the question.
+That is fine for some of these (rate, availability) and a missed chance for others.
+Fill **Answer it?** with: **yes** (write a reply) · **invite** (keep the invitation) · **no** (not a question for this site).
+
+**Where, when, how available**
+
+| Question | Today | Answer it? |
+|---|---|---|
+| Where are you based? | invitation | |
+| Do you work remotely? | invitation | |
+| Do you work outside Germany? | invitation | |
+| Which languages do you speak? | **wrong: shows TipTap** | |
+| Are you available? | invitation (as contact) | |
+| When could you start? | invitation | |
+| Do you work freelance or would you join a team? | invitation | |
+| Are you looking for a job? | invitation | |
+
+**Money and terms**
+
+| Question | Today | Answer it? |
+|---|---|---|
+| What is your day rate? | invitation | |
+| How much does a project cost? | invitation | |
+| Do you take fixed-price projects? | invitation | |
+| How long does a project take? | invitation | |
+| Do you sign NDAs? | invitation | |
+
+**Background and proof**
+
+| Question | Today | Answer it? |
+|---|---|---|
+| What is your background? | answered (who I am) | |
+| How many years of experience do you have? | invitation | |
+| Which clients did you work with? | invitation | |
+| Which industries have you worked in? | invitation | |
+| Do you have experience with insurance? | invitation (Senz would fit) | |
+| Have you worked with startups? | invitation | |
+| Do you have references? | invitation | |
+| Can I see your CV? | invitation | |
+| Are you on LinkedIn? | invitation | |
+
+**How I work**
+
+| Question | Today | Answer it? |
+|---|---|---|
+| What is your process? | invitation | |
+| How do you start a project? | invitation | |
+| What do you deliver at the end? | invitation | |
+| Do you work alone or with a team? | invitation | |
+| Do you write code yourself? | invitation | |
+| What tools do you use? | invitation | |
+| What does "the question nobody asked" mean? | invitation | |
+
+**What I do and don't do**
+
+| Question | Today | Answer it? |
+|---|---|---|
+| Do you run workshops? | invitation | |
+| Do you do user research? | invitation | |
+| Do you design interfaces too? | invitation | |
+| Do you do logo design? | invitation | |
+| Do you teach or give talks? | invitation | |
+| What do you not do? | invitation | |
+
+**Why me**
+
+| Question | Today | Answer it? |
+|---|---|---|
+| What makes you different? | invitation | |
+| Why should I hire you? | invitation | |
+| What is your best project? | invitation | |
+| What are you most proud of? | invitation | |
+| What are you working on now? | invitation | |
+| Who is this site for? | invitation | |
+
+**Getting in touch**
+
+| Question | Today | Answer it? |
+|---|---|---|
+| How can I contact you? | answered (send form) | |
+| Can we have a call? | invitation | |
+| Show me all your work | answered (all projects as cards) | |
+
+---
+
 ## When nothing matches: replies that invite the question (drafts)
 
 Each one is followed by the visitor's question, already filled in, an email field and a Send button.

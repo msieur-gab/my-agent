@@ -71,6 +71,18 @@ for (const [q, want] of talk) {
   const got = Match.intent(q);
   if (got === want) talkPass++; else console.log(`MISS intent ${got} (want ${want}) ← ${q}`);
 }
+// Black holes: everyday sentences that share a word with a piece but are not about it.
+// They must get "no answer" (or the full list), never a project presented as the closest match.
+const holes = ['show me all your work', 'can I see your work', 'what do you think about work', 'do you work remotely',
+  'which clients did you work with', 'what tools do you use', 'I need help', 'we have a problem with our app'];
+const fell = holes.filter(q => Match.verdict(Match.search(index, q)).kind !== 'none');
+fell.forEach(q => console.log(`MISS black hole: a project was shown ← ${q}`));
+const lists = ['show me all your work', 'what have you done', 'list your projects', 'portfolio', 'do you have case studies', 'can I see your work'];
+const notLists = ['what do you think about work', 'do you work remotely', 'I need help'];
+const listMiss = lists.filter(q => !Match.wantsList(q)).concat(notLists.filter(q => Match.wantsList(q)));
+listMiss.forEach(q => console.log(`MISS list request misread ← ${q}`));
+console.log(`black holes: ${holes.length - fell.length}/${holes.length}, list requests: ${lists.length + notLists.length - listMiss.length}/${lists.length + notLists.length}`);
+
 // Typed commands: the same actions as tapping a card or its link. [sentence, project in focus, expected]
 const commands = [
   ['can you open brainboard', null, 'open brainboard'], ['Brainboard', null, 'about brainboard'],
@@ -97,6 +109,30 @@ console.log(`commands: ${cmdPass}/${commands.length}, real questions read as com
 const swallowed = cases.filter(([q]) => Match.intent(q));
 swallowed.forEach(([q]) => console.log(`MISS real question read as small talk ← ${q}`));
 console.log(`small talk: ${talkPass}/${talk.length}, real questions swallowed: ${swallowed.length}\n`);
+
+// The conversation, end to end: what each kind of message gets back (respond.js, one visit, in order).
+const Respond = require('../src/assets/js/respond.js');
+const site = JSON.parse(fs.readFileSync(path.join(__dirname, '../content/site.json'), 'utf8'));
+const brain = Respond.create({ site, pieces: data.pieces });
+const rounds = [
+  ['a topic with several projects asks back with cards', () => brain.theme('distance'), r => r.template === 'choice' && r.cards.length === 3],
+  ['picking a card presents the project', () => brain.pick('pebbble'), r => r.template === 'project' && /^Pebbble is about/.test(r.says[0]) && r.link.href === '/work/pebbble/'],
+  ['"show me" then opens it', () => brain.ask('show me'), r => r.template === 'talk' && r.go === '/work/pebbble/'],
+  ['a misspelt project name still finds it', () => brain.ask('and what about titptap'), r => r.template === 'project' && r.link.href === '/work/tiptap/'],
+  ['a topic with one project presents it', () => brain.theme('ideas'), r => r.template === 'project' && r.link.href === '/work/senz/'],
+  ['the same project is not presented twice', () => brain.ask('How can my team test an idea before we commit a budget?'), r => r.template === 'talk' && /still my best answer/.test(r.says[0])],
+  ['a clear question says which words led to the answer', () => brain.ask('our chatbot hallucinates'), r => r.template === 'project' && /chatbot/.test(r.why)],
+  ['"show me all your work" lists every project', () => brain.ask('show me all your work'), r => r.template === 'choice' && r.cards.length === 10],
+  ['hello is answered as talk', () => brain.ask('hello'), r => r.template === 'talk' && r.next.items.length === site.themes.length],
+  ['no match invites the question', () => brain.ask('Do you do logo design?'), r => r.template === 'none' && r.form.text === 'Do you do logo design?'],
+  ['after "start over" a project can be presented again', () => { brain.reset(); return brain.theme('ideas'); }, r => r.template === 'project'],
+];
+let roundPass = 0;
+for (const [name, run, ok] of rounds) {
+  const r = run();
+  if (ok(r)) roundPass++; else console.log(`MISS round: ${name} → ${JSON.stringify(r).slice(0, 160)}`);
+}
+console.log(`conversation: ${roundPass}/${rounds.length}\n`);
 
 const redactions = [
   'Hi, I\'m Anna Schmidt from Example GmbH, reach me at anna@example.com or +49 170 1234567.',

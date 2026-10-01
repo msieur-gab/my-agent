@@ -218,6 +218,7 @@ def build_home(site, work, notes):
 </section>
 
 <section class="col thread" id="thread" aria-live="polite"></section>
+<div class="col restart-wrap"><button type="button" class="linkbtn restart" id="restart">Start over</button></div>
 
 <div class="composer" id="composer"><div class="col">
   <form class="ask" id="ask" role="search" action="/work/">
@@ -236,7 +237,8 @@ def build_home(site, work, notes):
     ld = {"@context": "https://schema.org", "@type": "Person", "name": site["name"],
           "jobTitle": site["role"], "url": site["baseUrl"], "address": site["location"]}
     return page(site, site["name"], body, description=site["opening"], path="/",
-                scripts=["/assets/js/match.js", "/assets/js/redact.js", "/assets/js/intro.js", "/assets/js/agent.js"],
+                scripts=["/assets/js/match.js", "/assets/js/redact.js", "/assets/js/respond.js", "/assets/js/chat.js",
+                         "/assets/js/send.js", "/assets/js/intro.js", "/assets/js/agent.js"],
                 json_ld=ld, body_class="is-home")
 
 

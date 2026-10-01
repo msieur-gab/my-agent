@@ -88,12 +88,15 @@
       var fields = [p.title, p.brief, p.question, p.answer].join(' ');
       var all = {};
       terms([p.title].concat(p.keywords || []).join(' ')).forEach(function (t) { all[t] = true; });
+      var any = {};
+      terms([fields].concat(p.keywords || [], p.answers || []).join(' ')).forEach(function (t) { any[t] = true; });
       return {
         piece: p,
         keys: (p.keywords || []).map(phrase).filter(function (k) { return k.trim(); }),
         answers: (p.answers || []).map(function (a) { return uniq(terms(a)); }),
         fields: uniq(terms(fields)),
-        all: all
+        all: all,
+        any: any
       };
     });
   }
@@ -107,16 +110,17 @@
   function score(entry, qTerms, qPhrase) {
     var s = 0, hits = [];
     entry.keys.forEach(function (k) { if (qPhrase.indexOf(k) !== -1) { s += 3; hits.push(k.trim()); } });
-    var best = 0;
+    var best = 0, asked = false;
     entry.answers.forEach(function (a) {
       var n = a.filter(function (t) { return qTerms.indexOf(t) !== -1; }).length;
       var ratio = a.length ? n / a.length : 0;
       var v = n * 1.5 + (ratio >= 0.6 ? 3 : 0);
       if (v > best) best = v;
+      if (ratio >= 0.6 && n >= 2) asked = true;
     });
     s += best;
     s += entry.fields.filter(function (t) { return qTerms.indexOf(t) !== -1; }).length * 0.5;
-    return { score: s, hits: hits };
+    return { score: s, hits: hits, asked: asked };
   }
 
   function search(index, question) {
@@ -129,7 +133,13 @@
       var r = score(entry, qTerms, qPhrase);
       /* matched: the visitor's own terms found in this piece's keywords, so the reply can say what it picked up on */
       var matched = qTerms.filter(function (t) { return entry.all[t]; });
-      return { piece: entry.piece, score: Math.round(r.score * 10) / 10, hits: r.hits, matched: matched };
+      var known = qTerms.filter(function (t) { return entry.any[t]; }).length;
+      /* Evidence: sharing one everyday word ("work", "app", "help") with a piece is not a match.
+         It takes a question I listed for this piece, or one of its keywords plus a second shared
+         word. A one-word message ("gdpr") only needs the keyword. */
+      var grounded = r.asked || (matched.length >= 1 && (known >= 2 || qTerms.length === 1));
+      var sure = r.asked || matched.length >= 2 || qTerms.length === 1;
+      return { piece: entry.piece, score: Math.round(r.score * 10) / 10, hits: r.hits, matched: matched, grounded: grounded, sure: sure };
     }).filter(function (r) { return r.score > 0; })
       .sort(function (a, b) { return b.score - a.score; });
   }
@@ -137,8 +147,20 @@
   var STRONG = 4.5, PARTIAL = 2;
 
   function verdict(results) {
+    results = results.filter(function (r) { return r.grounded; });
     if (!results.length || results[0].score < PARTIAL) return { kind: 'none', results: results };
-    return { kind: results[0].score >= STRONG ? 'answer' : 'partial', results: results };
+    return { kind: results[0].score >= STRONG && results[0].sure ? 'answer' : 'partial', results: results };
+  }
+
+  /* "Show me all your work", "portfolio", "do you have case studies": asking for the whole list.
+     Only checked when no piece answers the message, so "show me your work on GDPR" still finds its piece. */
+  var LIST_NOUN = /(^| )(work|works|projects?|portfolio|case studies|examples|everything|pieces)( |$)/;
+  var LIST_VERB = /(^| )(show|see|list|browse|view|all|everything|portfolio|examples|have)( |$)/;
+  var LIST_PHRASE = /^what (have you (done|made|built)|else (do you have|is there)|do you have)$/;
+
+  function wantsList(text) {
+    var f = fold(text);
+    return f.split(' ').length <= 8 && ((LIST_NOUN.test(f) && LIST_VERB.test(f)) || LIST_PHRASE.test(f));
   }
 
   /* Things people say to a person that aren't questions about the work.
@@ -148,7 +170,7 @@
     ['thanks', /^(ok |okay |great |nice |perfect )?(thanks|thank you|thx|merci|danke|cheers)( a lot| very much| so much| gabriel| gab)?$/],
     ['more', /^(more|tell me more|go on|what else|anything else|next|another( one| example)?|show me (more|another)( one)?)$/],
     ['how', /^((are|r) (you|u) (an? |the )?(real |actual )?(ai|bot|robot|llm|chatbot|human|person|real|chatgpt|gpt|claude|machine)|is this (an? )?(ai|bot|chatbot|llm|chatgpt|real)|how does (this|it|the (site|page))( site| page)? work|how do you work|what is this( site| page)?|who am i (talking|speaking|chatting) (to|with))/],
-    ['who', /^(who are you|who is (gabriel|gab|this)|what do you do|tell me about (yourself|you)|about you|what(s| is) your (job|background|story))/],
+    ['who', /^(who are you|who is (gabriel|gab|this)$|what do you do|tell me about (yourself|you)|about you|what(s| is) your (job|background|story))/],
     ['what', /^(help|what can i ask|what should i ask|what can you (do|answer|tell me)|what do you (know|have))/],
     ['contact', /^(contact|get in touch|how (can|do) i (contact|reach|hire|book) you|can i (contact|hire|reach|call|email|book) you|are you available|can we talk|lets talk|i (want|would like) to (talk|work) (to|with) you|what(s| is) your email)/]
   ];
@@ -202,7 +224,7 @@
     return null;
   }
 
-  var api = { command: command, fold: fold, prepare: prepare, search: search, verdict: verdict, terms: terms, intent: intent, STRONG: STRONG, PARTIAL: PARTIAL };
+  var api = { wantsList: wantsList, command: command, fold: fold, prepare: prepare, search: search, verdict: verdict, terms: terms, intent: intent, STRONG: STRONG, PARTIAL: PARTIAL };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.Match = api;
 })(this);
