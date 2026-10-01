@@ -15,9 +15,10 @@ No dependencies.
 
 ## Publishing
 
-Every push to `main` builds and deploys the site to GitHub Pages
-(`.github/workflows/pages.yml`), at https://msieur-gab.github.io/my-agent/.
-The workflow passes the `/my-agent` base path to the build, so links work in that sub-folder;
+Every push to `main` builds the site and puts the result on the `gh-pages` branch
+(`.github/workflows/pages.yml`). GitHub Pages serves that branch at
+https://msieur-gab.github.io/my-agent/ (Settings → Pages → Deploy from a branch → `gh-pages`, `/ (root)`).
+The build gets the `/my-agent` base path so links work in that sub-folder;
 locally and on a root domain the base path stays empty.
 Netlify would also work as is (`netlify.toml`).
 
