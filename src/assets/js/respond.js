@@ -20,6 +20,7 @@
 
   function create(data) {
     var site = data.site, voice = site.voice, pieces = data.pieces;
+    var base = site.basePath || '';
     var index = Match.prepare(pieces);
     var bySlug = {};
     pieces.forEach(function (p) { bySlug[p.slug] = p; });
@@ -166,7 +167,7 @@
       }
       if (kind === 'contact') return talk(line, { form: { text: '' } });
       if (kind === 'thanks') return talk(line);
-      if (kind === 'how') return talk(line, { link: { text: voice.howLink, href: '/how-this-site-works/' }, next: topics() });
+      if (kind === 'how') return talk(line, { link: { text: voice.howLink, href: base + '/how-this-site-works/' }, next: topics() });
       return talk(line, { next: topics() });
     }
 
@@ -196,7 +197,7 @@
     /* "Show me all your work." */
     function everything() {
       var work = pieces.filter(function (p) { return p.type === 'work'; });
-      return choice(voice.all, work, { text: voice.allLink, href: '/work/' });
+      return choice(voice.all, work, { text: voice.allLink, href: base + '/work/' });
     }
 
     return { ask: ask, pick: pick, theme: theme, reset: reset };

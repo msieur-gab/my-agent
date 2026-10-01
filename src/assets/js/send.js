@@ -50,7 +50,7 @@
       if (!mail.value || !mail.checkValidity()) { status.textContent = 'Add an email address so I can reply.'; mail.focus(); return; }
       var body = new URLSearchParams({ 'form-name': 'question', question: q, email: mail.value }).toString();
       status.textContent = 'Sending…';
-      fetch('/', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: body })
+      fetch((window.SITE_BASE || '') + '/', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: body })
         .then(function (r) {
           if (!r.ok) throw new Error(r.status);
           box.textContent = '';

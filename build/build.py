@@ -8,6 +8,7 @@ writes static, crawlable HTML plus answers.json, sitemap.xml, robots.txt and llm
 """
 import html
 import json
+import os
 import re
 import shutil
 from pathlib import Path
@@ -111,8 +112,24 @@ def markdown(md):
 
 # ---------------------------------------------------------------- content
 
+# Where the site lives. Empty for a root domain (Netlify, local preview);
+# "/my-agent" on GitHub Pages. Set by the deploy workflow through BASE_PATH / BASE_URL.
+BASE = os.environ.get("BASE_PATH", "").rstrip("/")
+
+
 def load_site():
-    return json.loads((CONTENT / "site.json").read_text(encoding="utf-8"))
+    site = json.loads((CONTENT / "site.json").read_text(encoding="utf-8"))
+    if os.environ.get("BASE_URL"):
+        site["baseUrl"] = os.environ["BASE_URL"]
+    site["basePath"] = BASE
+    return site
+
+
+def with_base(text):
+    """Prefix every root-relative link (href, src, action) with the base path."""
+    if not BASE:
+        return text
+    return re.sub(r'\b(href|src|action)="/(?!/)', lambda m: f'{m.group(1)}="{BASE}/', text)
 
 
 def load_pieces(folder, kind):
@@ -202,7 +219,7 @@ def build_home(site, work, notes):
 
     data = {
         "site": {k: site[k] for k in ("themes", "partialIntro", "noMatch", "softInvite", "email", "countEndpoint",
-                                      "voice", "smalltalk")},
+                                      "voice", "smalltalk", "basePath")},
         "pieces": [public_piece(p) for p in work + notes],
     }
     data_json = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
@@ -245,7 +262,10 @@ def build_home(site, work, notes):
 def public_piece(p):
     keep = ("slug", "type", "title", "url", "where", "year", "date", "context", "themes",
             "intro", "about", "brief", "question", "answer", "keywords", "answers")
-    return {k: p.get(k) for k in keep if p.get(k) not in (None, "")}
+    out = {k: p.get(k) for k in keep if p.get(k) not in (None, "")}
+    if "url" in out:
+        out["url"] = BASE + out["url"]
+    return out
 
 
 def build_piece(site, p):
@@ -326,6 +346,8 @@ def build_sitemap(site, urls):
 def write(rel, text):
     path = OUT / rel
     path.parent.mkdir(parents=True, exist_ok=True)
+    if rel.endswith(".html"):
+        text = with_base(text)
     path.write_text(text, encoding="utf-8")
 
 
@@ -350,6 +372,7 @@ def main():
     write("sitemap.xml", build_sitemap(site, urls))
     write("robots.txt", f"User-agent: *\nAllow: /\n\nSitemap: {site['baseUrl'].rstrip('/')}/sitemap.xml\n")
     write("llms.txt", build_llms(site, work, notes))
+    write(".nojekyll", "")
 
     print(f"Built {len(work)} work pieces, {len(notes)} notes → {OUT.relative_to(ROOT)}/")
 

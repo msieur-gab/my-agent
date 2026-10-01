@@ -11,7 +11,15 @@ cd public && python3 -m http.server 8000
 node tests/check.js           # checks matching and redaction (after a build)
 ```
 
-No dependencies. Netlify runs the same build (`netlify.toml`).
+No dependencies.
+
+## Publishing
+
+Every push to `main` builds and deploys the site to GitHub Pages
+(`.github/workflows/pages.yml`), at https://msieur-gab.github.io/my-agent/.
+The workflow passes the `/my-agent` base path to the build, so links work in that sub-folder;
+locally and on a root domain the base path stays empty.
+Netlify would also work as is (`netlify.toml`).
 
 ## Where things live
 
@@ -27,26 +35,9 @@ src/assets/js/send.js    the form that reaches me
 src/assets/js/redact.js  removes names and contact details before anything is sent
 src/assets/js/intro.js   the opening lines, shown one after another
 src/assets/js/agent.js   wires the above together
-build/build.py        # builds the site into public/
-cd public && python3 -m http.server 8000
-node tests/check.js           # checks matching and redaction (after a build)
-```
-
-No dependencies. Netlify runs the same build (`netlify.toml`).
-
-## Where things live
-
-```
-content/site.json        opening line, themes, "no answer" replies, contact details
-content/work/*.md        one file per project
-content/notes/*.md       one file per note
-content/pages/*.md       plain pages (how this site works)
-src/assets/js/match.js   finds the best piece for a question (extractive, no generation)
-src/assets/js/redact.js  removes names and contact details before anything is sent
-src/assets/js/intro.js   the intro lines, shown one after another
-src/assets/js/agent.js   the conversation
 build/build.py           content → static, crawlable pages + answers.json, sitemap, robots.txt, llms.txt
 docs/                    site foundation, interaction model and the questions log
+.github/workflows/       build and deploy to GitHub Pages
 ```
 
 ## Adding a piece
@@ -80,5 +71,5 @@ Then rebuild. The piece appears on its own page, in the "Everything here" list, 
 ## Not wired yet
 
 - Counting theme clicks and questions: set `countEndpoint` in `site.json` once there's somewhere to send them.
-- Messages are posted as a Netlify form named `question`; they only work once deployed on Netlify.
+- Messages are posted as a Netlify form named `question`. GitHub Pages can't receive them, so the form says it can't send yet (and gives the email once `email` is set in `site.json`).
 - Email, LinkedIn, CV and the final domain (`baseUrl`) are empty in `site.json`.

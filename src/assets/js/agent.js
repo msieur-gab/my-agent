@@ -12,6 +12,7 @@
 
   var data = JSON.parse(dataEl.textContent);
   var site = data.site;
+  window.SITE_BASE = site.basePath || '';
   var brain = Respond.create(data);
   var lastSaid = ''; /* what the send form is filled with when the visitor accepts the invitation */
 

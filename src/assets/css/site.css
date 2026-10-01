@@ -1,7 +1,7 @@
 /* Light and open: one message per screen, one typeface, one link colour. */
 @font-face {
   font-family: "Instrument Sans";
-  src: url("/assets/fonts/InstrumentSans-var.woff2") format("woff2");
+  src: url("../fonts/InstrumentSans-var.woff2") format("woff2");
   font-weight: 400 700;
   font-stretch: 75% 100%;
   font-display: swap;
