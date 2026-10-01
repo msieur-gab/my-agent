@@ -1,0 +1,41 @@
+{
+  "name": "Gabriel Baude",
+  "role": "Designer and creative technologist",
+  "location": "Munich, working across Europe",
+  "baseUrl": "https://example.netlify.app",
+  "email": "",
+  "linkedin": "",
+  "cv": "",
+  "countEndpoint": null,
+
+  "opening": "I answer the questions nobody dares to ask.",
+  "invite": "So ask me yours. Or pick a theme.",
+  "placeholder": "e.g. Can we use AI and still pass GDPR?",
+  "honesty": "Answers come only from my own work. If I haven't done something, I'll say so. No cookies.",
+
+  "themes": [
+    { "id": "ideas",    "label": "Ideas that never get tested", "pieces": ["senz"] },
+    { "id": "trust",    "label": "AI you can actually trust",   "pieces": ["brainboard", "musicast", "babiban", "senz"] },
+    { "id": "gdpr",     "label": "GDPR and data protection",    "pieces": ["datadraw"] },
+    { "id": "privacy",  "label": "Privacy by design",           "pieces": ["symbios", "pebbble", "brainboard"] },
+    { "id": "distance", "label": "Presence across distance",    "pieces": ["pebbble", "tiptap", "babiban"] },
+    { "id": "screens",  "label": "Children and screens",        "pieces": ["pilipala", "vrooom"] }
+  ],
+
+  "partialIntro": "This is the closest I have.",
+
+  "noMatch": [
+    "I haven't built this one yet, but I have a view on it. Send me the question and I'll answer you myself.",
+    "Nothing in my work covers this yet. That doesn't mean I can't help. Tell me more?",
+    "That's a question I'd rather answer properly than guess at. Send it to me.",
+    "I haven't worked on exactly this. I'd like to hear why you're asking.",
+    "No project to show for that one, but I do have thoughts. Want them?",
+    "You've found a gap in my work. Send me the question and I'll answer it properly.",
+    "I'd be guessing if I showed you something now. Send it over and get a real answer.",
+    "Not something I've built yet. That's often where the interesting work starts.",
+    "I don't have a case study for this. I do have an opinion. Ask me directly.",
+    "That one's new here. Leave it with me and I'll reply personally."
+  ],
+
+  "softInvite": "Want to talk about your version of this?"
+}

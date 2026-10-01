@@ -1,0 +1,10 @@
+[build]
+  command = "python3 build/build.py"
+  publish = "public"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Referrer-Policy = "no-referrer"
+    X-Content-Type-Options = "nosniff"
+    Permissions-Policy = "interest-cohort=()"
