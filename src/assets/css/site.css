@@ -21,7 +21,7 @@
 }
 
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+html { scroll-behavior: smooth; scroll-padding-top: 76px; -webkit-text-size-adjust: 100%; } /* scrolled-to content lands below the fixed header */
 body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 18px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
 a { color: var(--link); text-underline-offset: 4px; text-decoration-thickness: 1px; }
 :focus-visible { outline: 2px solid var(--link); outline-offset: 3px; }
@@ -31,7 +31,8 @@ a { color: var(--link); text-underline-offset: 4px; text-decoration-thickness: 1
 .gap { color: var(--link); border-bottom: 1px dashed var(--link); }
 
 /* header & footer */
-.top { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap; padding: 22px var(--gutter); }
+/* The header stays at the top of the screen on every page. */
+.top { position: sticky; top: 0; z-index: 6; display: flex; justify-content: space-between; align-items: baseline; gap: 6px 16px; flex-wrap: wrap; padding: 16px var(--gutter); background: color-mix(in srgb, var(--bg) 88%, transparent); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
 .top .home { color: var(--fg); text-decoration: none; font-weight: 500; font-size: 16px; }
 .top nav { display: flex; gap: clamp(14px, 3vw, 28px); flex-wrap: wrap; }
 .top nav a { color: var(--muted); text-decoration: none; font-size: 15px; }
@@ -42,9 +43,28 @@ a { color: var(--link); text-underline-offset: 4px; text-decoration-thickness: 1
 .col { max-width: 760px; margin: 0 auto; padding-inline: clamp(16px, 5vw, 32px); }
 
 /* opening */
-.open { padding-block: clamp(48px, 11vh, 112px) 24px; display: flex; flex-direction: column; gap: 22px; }
+.open { padding-block: clamp(28px, 6vh, 72px) 24px; display: flex; flex-direction: column; gap: 22px; }
 h1 { margin: 0; font-weight: 500; font-size: clamp(36px, 5.6vw, 60px); line-height: 1.06; letter-spacing: -0.025em; text-wrap: balance; }
-.invite { margin: 0; font-size: clamp(19px, 2vw, 22px); color: var(--muted); }
+/* The intro lines. Stacked by default (no JavaScript, reduced motion). */
+.stage { display: flex; flex-direction: column; gap: 22px; }
+.stage p { margin: 0; max-width: 34em; font-size: clamp(19px, 2vw, 22px); line-height: 1.45; }
+.stage .who { font-size: 16px; color: var(--muted); }
+.stage .invite { font-weight: 500; }
+
+/* With JavaScript and motion: one line at a time, in the same place, ending on the question. */
+@media (prefers-reduced-motion: no-preference) {
+  .js .stage { display: grid; align-items: end; min-height: clamp(150px, 24vh, 240px); cursor: pointer; }
+  .js .done .stage { cursor: auto; }
+  .js .stage > * { grid-area: 1 / 1; max-width: none; color: var(--fg); font-weight: 500; font-size: clamp(27px, 4.2vw, 46px); line-height: 1.14; letter-spacing: -0.02em; text-wrap: balance; opacity: 0; transform: translateY(10px); transition: opacity .3s ease, transform .3s ease; }
+  .js .stage > .was-on { transform: translateY(-10px); }
+  .js .stage > .is-on { opacity: 1; transform: none; transition: opacity .55s ease .3s, transform .55s cubic-bezier(.2, .8, .2, 1) .3s; }
+  .js .steps { display: flex; gap: 6px; }
+  .js .steps button { width: 22px; height: 24px; padding: 0; border: 0; background: none; cursor: pointer; }
+  .js .steps button::before { content: ""; display: block; height: 3px; border-radius: 2px; background: var(--faint); transition: background .3s ease; }
+  .js .steps button.is-on::before { background: var(--fg); }
+  .js .open .themes { opacity: 0; visibility: hidden; transition: opacity .6s ease .5s, visibility 0s linear .5s; }
+  .js .open.done .themes { opacity: 1; visibility: visible; }
+}
 
 .ask { display: flex; gap: 10px; align-items: stretch; border-bottom: 1.5px solid var(--fg); padding-bottom: 6px; margin-top: 8px; }
 .ask input { flex: 1 1 auto; min-width: 0; font: inherit; font-size: clamp(19px, 2vw, 22px); color: var(--fg); background: transparent; border: 0; padding: 10px 0; }
@@ -60,15 +80,29 @@ h1 { margin: 0; font-weight: 500; font-size: clamp(36px, 5.6vw, 60px); line-heig
 .chip:hover { border-color: var(--fg); }
 .chip[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
 
+/* The question field: in its place under the intro at rest, held at the bottom of the screen
+   as soon as the conversation is longer than the screen. The intro stays on the page, above. */
+.composer { position: sticky; bottom: 0; z-index: 5; padding-top: 20px; background: linear-gradient(to bottom, transparent, var(--bg) 20px); }
+.composer .col { display: flex; flex-direction: column; gap: 10px; padding-bottom: max(14px, env(safe-area-inset-bottom)); }
+.composer .ask { margin-top: 0; }
+
 /* the conversation */
 .thread { display: flex; flex-direction: column; gap: 40px; padding-block: 8px 24px; }
 .thread:empty { display: none; }
 .turn { display: flex; flex-direction: column; gap: 18px; }
+/* Room under the newest turn, so the visitor's message can rise to the top of the screen. */
+.turn:last-child { min-height: calc(100dvh - var(--top-h, 60px) - var(--composer-h, 120px) - 56px); }
+/* Whatever joins the conversation arrives, it doesn't pop. */
+.turn > * { animation: arrive .5s cubic-bezier(.2, .8, .2, 1) both; }
+@keyframes arrive { from { opacity: 0; transform: translateY(10px); } }
 .you { margin: 0; align-self: flex-end; max-width: 85%; background: var(--soft); padding: 12px 16px; border-radius: 16px 16px 4px 16px; font-size: 17px; }
 .you .label { display: block; font-size: 12px; color: var(--muted); letter-spacing: 0.04em; margin-bottom: 2px; }
 .say { margin: 0; font-size: 19px; }
 .say .w { opacity: 0; transition: opacity .25s ease; }
 .say .w.on { opacity: 1; }
+.heard { margin: -8px 0 0; font-size: 14px; color: var(--muted); opacity: 0; transition: opacity .45s ease; }
+.heard.on { opacity: 1; }
+.heard .kw { color: var(--fg); }
 .card { display: flex; flex-direction: column; gap: 18px; padding-top: 22px; border-top: 1px solid var(--faint); opacity: 0; transform: translateY(6px); transition: opacity .45s ease, transform .45s ease; }
 .card.on { opacity: 1; transform: none; }
 .where { margin: 0; color: var(--muted); font-size: 15px; }
@@ -84,6 +118,24 @@ h1 { margin: 0; font-weight: 500; font-size: clamp(36px, 5.6vw, 60px); line-heig
 .linkbtn { font: inherit; font-size: 16px; color: var(--link); background: none; border: 0; padding: 0; min-height: 44px; cursor: pointer; text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; }
 .restart { align-self: flex-start; color: var(--muted); }
 
+/* several pieces to choose from: cards side by side, swiped left and right */
+.deck-wrap { display: flex; flex-direction: column; gap: 12px; }
+.deck { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; scrollbar-width: none; margin-inline: calc(-1 * clamp(16px, 5vw, 32px)); padding: 4px clamp(16px, 5vw, 32px) 10px; scroll-padding-inline: clamp(16px, 5vw, 32px); }
+.deck::-webkit-scrollbar { display: none; }
+.pick { flex: 0 0 clamp(224px, 74vw, 264px); scroll-snap-align: start; display: flex; flex-direction: column; gap: 4px; min-height: 232px; padding: 18px; font: inherit; color: var(--fg); text-align: left; background: var(--surface); border: 1px solid var(--faint); border-radius: 16px; cursor: pointer; transition: border-color .2s ease; }
+.pick:hover, .pick[aria-pressed="true"] { border-color: var(--fg); }
+.pick-title { font-weight: 500; font-size: 17px; }
+.pick-where { font-size: 13px; color: var(--muted); }
+.pick-q { margin-top: 14px; font-size: 19px; line-height: 1.28; letter-spacing: -0.01em; text-wrap: balance; }
+.pick-go { margin-top: auto; padding-top: 16px; font-size: 15px; color: var(--link); }
+.pick[aria-pressed="true"] .pick-go { visibility: hidden; }
+.deck-nav { display: flex; gap: 6px; justify-content: flex-end; }
+.deck-nav[hidden] { display: none; }
+.deck-btn { width: 44px; height: 44px; font: inherit; font-size: 18px; color: var(--fg); background: transparent; border: 1px solid var(--faint); border-radius: 50%; cursor: pointer; transition: border-color .2s ease, opacity .2s ease; }
+.deck-btn:hover { border-color: var(--fg); }
+.deck-btn:disabled { opacity: .3; cursor: default; border-color: var(--faint); }
+@media (pointer: coarse) { .deck-nav { display: none; } } /* fingers swipe */
+
 /* send form */
 .send { display: flex; flex-direction: column; gap: 16px; padding: 22px; background: var(--surface); border: 1px solid var(--faint); opacity: 0; transition: opacity .45s ease; }
 .send.on { opacity: 1; }
@@ -98,9 +150,6 @@ h1 { margin: 0; font-weight: 500; font-size: clamp(36px, 5.6vw, 60px); line-heig
 .send .btn { align-self: flex-start; padding: 0 24px; }
 
 /* index lists */
-.everything { padding-block: 72px 24px; }
-.everything h2 { font-weight: 500; font-size: 26px; letter-spacing: -0.01em; margin: 0 0 8px; }
-.everything h3 { font-weight: 500; font-size: 15px; color: var(--muted); letter-spacing: 0.04em; margin: 28px 0 4px; }
 .index { list-style: none; margin: 0; padding: 0; }
 .index li { border-top: 1px solid var(--faint); }
 .index li:last-child { border-bottom: 1px solid var(--faint); }
@@ -124,6 +173,7 @@ h1 { margin: 0; font-weight: 500; font-size: clamp(36px, 5.6vw, 60px); line-heig
 .after { margin: 16px 0 0; font-size: 17px; }
 
 @media (max-width: 560px) {
+  html { scroll-padding-top: 104px; } /* the header wraps to two lines */
   .index a { grid-template-columns: minmax(0, 1fr); }
   .index .m { grid-column: 1; }
   .you { max-width: 100%; }
@@ -131,5 +181,7 @@ h1 { margin: 0; font-weight: 500; font-size: clamp(36px, 5.6vw, 60px); line-heig
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .say .w, .card, .send { transition: none; }
+  .say .w, .card, .heard, .send { transition: none; }
+  .turn > * { animation: none; }
+  .pick { transition: none; }
 }

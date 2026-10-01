@@ -9,7 +9,13 @@
   "countEndpoint": null,
 
   "opening": "I answer the questions nobody dares to ask.",
-  "invite": "So ask me yours. Or pick a theme.",
+  "who": "I'm Gabriel Baude, a designer and creative technologist in Munich.",
+  "stance": [
+    "Most briefs ask to ease the symptoms of an existing service.",
+    "Asking questions finds the root cause behind them.",
+    "Then the solution changes how the system works, instead of patching and polishing the wrong fix."
+  ],
+  "invite": "Which of these sounds like yours? Or ask in your own words.",
   "placeholder": "e.g. Can we use AI and still pass GDPR?",
   "honesty": "Answers come only from my own work. If I haven't done something, I'll say so. No cookies.",
 
@@ -37,5 +43,30 @@
     "That one's new here. Leave it with me and I'll reply personally."
   ],
 
-  "softInvite": "Want to talk about your version of this?"
+  "softInvite": "Want to talk about your version of this?",
+
+  "voice": {
+    "leadBrief": "The brief said:",
+    "leadView": "The usual view:",
+    "leadQuestion": "The question nobody asked:",
+    "fallbackIntro": "This is what I have on that.",
+    "heard": "Why this one: you mentioned",
+    "askBack": "I have a few pieces on that. Which is closest to your situation?",
+    "open": "Show me →",
+    "aboutLead": "{title} is about {about}",
+    "opening": "Here is the full story of {title}.",
+    "another": "Another angle on that.",
+    "seen": "{title} is still my best answer to that.",
+    "noMore": "That's everything I have on this for now.",
+    "themesAgain": "Or start from one of these."
+  },
+
+  "smalltalk": {
+    "greeting": "Hello. Tell me what you're stuck on, and I'll show you what I did when I met the same question.",
+    "thanks": "You're welcome.",
+    "who": "I'm Gabriel Baude, a designer and creative technologist in Munich, working across Europe. Ask me about a problem and I'll answer with the work.",
+    "how": "No language model is writing this. The page matches your question against my own projects and notes and shows you the closest piece, in my words. When nothing fits, it says so.",
+    "what": "Anything you'd ask before starting a project. These are the questions I hear most.",
+    "contact": "Write to me here. I read and answer every message myself."
+  }
 }

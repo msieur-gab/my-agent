@@ -149,6 +149,7 @@ def page(site, title, body, description="", path="/", scripts=(), json_ld=None, 
 <link rel="canonical" href="{e(site['baseUrl'].rstrip('/') + path)}">
 <link rel="preload" href="/assets/fonts/InstrumentSans-var.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/assets/css/site.css">
+<script>document.documentElement.classList.add('js')</script>
 {ld}
 </head>
 <body class="{body_class}">
@@ -199,37 +200,33 @@ def build_home(site, work, notes):
         href = first["url"] if first else "/work/"
         chips.append(f'<a class="chip" href="{e(href)}" data-theme="{e(t["id"])}">{e(t["label"])}</a>')
 
-    def item(p):
-        return (f'<li><a href="{e(p["url"])}"><span class="t">{e(p["title"])}</span>'
-                f'<span class="q">{e(p.get("question", ""))}</span></a></li>')
-
     data = {
-        "site": {k: site[k] for k in ("themes", "partialIntro", "noMatch", "softInvite", "email", "countEndpoint")},
+        "site": {k: site[k] for k in ("themes", "partialIntro", "noMatch", "softInvite", "email", "countEndpoint",
+                                      "voice", "smalltalk")},
         "pieces": [public_piece(p) for p in work + notes],
     }
     data_json = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
     body = f"""
-<section class="col open">
-  <h1>{e(site['opening'])}</h1>
-  <p class="invite">{e(site['invite'])}</p>
+<section class="col open" id="intro">
+  <div class="stage" id="stage">
+    <p class="who">{e(site['who'])}</p>
+    <h1>{e(site['opening'])}</h1>
+    {''.join(f"<p>{e(line)}</p>" for line in site['stance'])}
+    <p class="invite">{e(site['invite'])}</p>
+  </div>
+  <div class="themes" id="themes">{''.join(chips)}</div>
+</section>
+
+<section class="col thread" id="thread" aria-live="polite"></section>
+
+<div class="composer" id="composer"><div class="col">
   <form class="ask" id="ask" role="search" action="/work/">
     <label for="q" class="sr">Your question</label>
     <input id="q" name="q" type="text" autocomplete="off" placeholder="{e(site['placeholder'])}">
     <button type="submit">Ask</button>
   </form>
   <p class="honesty">{e(site['honesty'])} <a href="/how-this-site-works/">How this works</a></p>
-  <div class="themes" id="themes">{''.join(chips)}</div>
-</section>
-
-<section class="col thread" id="thread" aria-live="polite"></section>
-
-<section class="col everything" id="everything">
-  <h2>Everything here</h2>
-  <h3>Work</h3>
-  <ul class="index">{''.join(item(p) for p in work)}</ul>
-  <h3>Notes</h3>
-  <ul class="index">{''.join(item(p) for p in notes)}</ul>
-</section>
+</div></div>
 
 <form name="question" data-netlify="true" netlify-honeypot="bot-field" hidden>
   <input name="question"><input name="email"><input name="bot-field">
@@ -239,13 +236,13 @@ def build_home(site, work, notes):
     ld = {"@context": "https://schema.org", "@type": "Person", "name": site["name"],
           "jobTitle": site["role"], "url": site["baseUrl"], "address": site["location"]}
     return page(site, site["name"], body, description=site["opening"], path="/",
-                scripts=["/assets/js/match.js", "/assets/js/redact.js", "/assets/js/agent.js"],
+                scripts=["/assets/js/match.js", "/assets/js/redact.js", "/assets/js/intro.js", "/assets/js/agent.js"],
                 json_ld=ld, body_class="is-home")
 
 
 def public_piece(p):
     keep = ("slug", "type", "title", "url", "where", "year", "date", "context", "themes",
-            "intro", "brief", "question", "answer", "keywords", "answers")
+            "intro", "about", "brief", "question", "answer", "keywords", "answers")
     return {k: p.get(k) for k in keep if p.get(k) not in (None, "")}
 
 

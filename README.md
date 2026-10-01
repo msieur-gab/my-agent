@@ -22,9 +22,10 @@ content/notes/*.md       one file per note
 content/pages/*.md       plain pages (how this site works)
 src/assets/js/match.js   finds the best piece for a question (extractive, no generation)
 src/assets/js/redact.js  removes names and contact details before anything is sent
+src/assets/js/intro.js   the intro lines, shown one after another
 src/assets/js/agent.js   the conversation
 build/build.py           content → static, crawlable pages + answers.json, sitemap, robots.txt, llms.txt
-docs/                    site foundation and the questions log
+docs/                    site foundation, interaction model and the questions log
 ```
 
 ## Adding a piece

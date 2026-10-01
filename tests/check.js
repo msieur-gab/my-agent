@@ -46,6 +46,58 @@ for (const [q, want] of cases) {
 }
 console.log(`\nmatching: ${pass}/${cases.length}\n`);
 
+// Typos: the same questions with slips in them must still find their piece.
+const typos = [
+  ['How can my team test an idea befor we comit a budjet?', 'senz'], ['our chatbot halucinates', 'brainboard'],
+  ['Can we use AI and still pass GDRP?', 'datadraw'], ['have you worked on child abducton', 'pebbble'],
+  ['Can a toy be conected without being adictive?', 'vrooom'], ['How do we anonymize an employe list before sharing it?', 'datadraw'],
+];
+let typoPass = 0;
+for (const [q, want] of typos) {
+  const v = Match.verdict(Match.search(index, q));
+  const got = v.kind === 'none' ? 'none' : v.results[0].piece.slug;
+  if (got === want) typoPass++; else console.log(`MISS typo ${got} (want ${want}) ← ${q}`);
+}
+console.log(`typos: ${typoPass}/${typos.length}`);
+
+// Small talk: answered as talk, and never swallowing a real question.
+const talk = [
+  ['Hello!', 'greeting'], ['good morning', 'greeting'], ['Thanks a lot', 'thanks'],
+  ['Are you an AI?', 'how'], ['How does this work?', 'how'], ['Who are you?', 'who'],
+  ['What can I ask?', 'what'], ['Can I hire you?', 'contact'], ['tell me more', 'more'],
+];
+let talkPass = 0;
+for (const [q, want] of talk) {
+  const got = Match.intent(q);
+  if (got === want) talkPass++; else console.log(`MISS intent ${got} (want ${want}) ← ${q}`);
+}
+// Typed commands: the same actions as tapping a card or its link. [sentence, project in focus, expected]
+const commands = [
+  ['can you open brainboard', null, 'open brainboard'], ['Brainboard', null, 'about brainboard'],
+  ['Tell me about Senz', null, 'about senz'], ['what is Pebbble?', null, 'about pebbble'],
+  ['show me this project', 'senz', 'open senz'], ['open it', 'vrooom', 'open vrooom'],
+  ['read the full story', 'tiptap', 'open tiptap'], ['tell me about this one', 'senz', 'about senz'],
+  ['show me Brainboard', null, 'about brainboard'], ['show me Brainboard', 'brainboard', 'open brainboard'],
+  ['show me', 'pebbble', 'open pebbble'], ['open', 'pebbble', 'open pebbble'], ['Can you show me, please?', 'pebbble', 'open pebbble'],
+  ['show me', null, 'null'],
+  ['and what about titptap', null, 'about tiptap'], ['tell me about pebble', null, 'about pebbble'], ['open vroom', null, 'open vrooom'],
+  ['what is brainbord', null, 'about brainboard'], ['tip tap', null, 'about tiptap'],
+  ['show me this project', null, 'null'], ['How does Brainboard avoid making things up?', null, 'null'],
+];
+let cmdPass = 0;
+for (const [q, focus, want] of commands) {
+  const c = Match.command(q, data.pieces, focus);
+  const got = c ? c.action + ' ' + c.slug : 'null';
+  if (got === want) cmdPass++; else console.log(`MISS command ${got} (want ${want}) ← ${q}`);
+}
+const hijacked = cases.filter(([q]) => Match.command(q, data.pieces, 'senz'));
+hijacked.forEach(([q]) => console.log(`MISS real question read as a command ← ${q}`));
+console.log(`commands: ${cmdPass}/${commands.length}, real questions read as commands: ${hijacked.length}`);
+
+const swallowed = cases.filter(([q]) => Match.intent(q));
+swallowed.forEach(([q]) => console.log(`MISS real question read as small talk ← ${q}`));
+console.log(`small talk: ${talkPass}/${talk.length}, real questions swallowed: ${swallowed.length}\n`);
+
 const redactions = [
   'Hi, I\'m Anna Schmidt from Example GmbH, reach me at anna@example.com or +49 170 1234567.',
   'We at Northwind need help with GDPR. See https://northwind.example/brief',
