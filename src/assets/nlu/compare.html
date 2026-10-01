@@ -23,8 +23,9 @@ Faded results are below that method's refusal floor: the page would not show the
 <form id="f"><input id="q" placeholder="e.g. restraint as a design skill" autofocus><button>Ask</button></form>
 <p id="status">Loading the model…</p>
 <div class="cols" id="cols"></div>
-<script src="/assets/js/match.js"></script>
-<script src="/assets/js/nlu.js"></script>
+<script>window.SITE_BASE = location.pathname.split('/assets/')[0];</script>
+<script src="../js/match.js"></script>
+<script src="../js/nlu.js"></script>
 <script>
 (async function () {
   var status = document.getElementById('status'), cols = document.getElementById('cols');
@@ -32,8 +33,8 @@ Faded results are below that method's refusal floor: the page would not show the
   try {
     var t0 = performance.now();
     await Nlu.warm();
-    data = await (await fetch('/assets/nlu/compare.json')).json();
-    V = new Int8Array(await (await fetch('/assets/nlu/compare.bin')).arrayBuffer());
+    data = await (await fetch('compare.json')).json();
+    V = new Int8Array(await (await fetch('compare.bin')).arrayBuffer());
     status.textContent = 'Ready (model loaded in ' + Math.round(performance.now() - t0) + ' ms). Five texts: Senz, Dowgo, AutoFlow, Pebbble, Vrooom.';
   } catch (e) { status.textContent = 'Could not load: ' + (e && e.message || e); return; }
 
