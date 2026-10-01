@@ -22,7 +22,7 @@
   "themes": [
     { "id": "ideas",    "label": "Ideas that never get tested", "pieces": ["senz"] },
     { "id": "trust",    "label": "AI you can actually trust",   "pieces": ["brainboard", "musicast", "babiban", "senz"] },
-    { "id": "gdpr",     "label": "GDPR and data protection",    "pieces": ["autoflow"] },
+    { "id": "gdpr",     "label": "GDPR and data protection",    "pieces": ["datadraw"] },
     { "id": "privacy",  "label": "Privacy by design",           "pieces": ["symbios", "pebbble", "brainboard"] },
     { "id": "distance", "label": "Presence across distance",    "pieces": ["pebbble", "tiptap", "babiban"] },
     { "id": "screens",  "label": "Children and screens",        "pieces": ["pilipala", "vrooom"] }
