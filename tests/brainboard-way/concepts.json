@@ -1,0 +1,23 @@
+{
+  "note": "Questions that name a concept the way the text itself does, the way one asks a library one has read. Counterpart to held-out.json, whose questions are a buyer's paraphrase.",
+  "answerable": [
+    {"q": "nothing is created, nothing is lost, everything is transformed", "piece": ["senz"], "expect": ["Lavoisier"]},
+    {"q": "the pause before pressing predict as a thinking space", "piece": ["senz"], "expect": ["thinking space"]},
+    {"q": "users contorting their sketches to help the model", "piece": ["senz"], "expect": ["draw-predict-infinity-loop"]},
+    {"q": "the claims expert sketching at the whiteboard", "piece": ["senz"], "expect": ["home claims expert"]},
+    {"q": "a colleague handing you the next thing instead of a dashboard", "piece": ["dowgo"], "expect": ["A colleague handing you the next thing"]},
+    {"q": "restraint as a design skill", "piece": ["dowgo"], "expect": ["Saying no to the modern answer", "Restraint as a design skill"]},
+    {"q": "make it feel too easy to be true", "piece": ["dowgo"], "expect": ["too easy to be true"]},
+    {"q": "the map should look like the territory", "piece": ["autoflow"], "expect": ["map should look like the territory", "made from the same material"]},
+    {"q": "the canvas as a sequencer like a signal chain", "piece": ["autoflow"], "expect": ["signal chain"]},
+    {"q": "the interaction is the audit", "piece": ["autoflow"], "expect": ["interaction IS the"]},
+    {"q": "the stone is the key", "piece": ["pebbble"], "expect": ["Physical possession is the only authentication", "stone is the key"]},
+    {"q": "a voice in the dark is a presence", "piece": ["pebbble"], "expect": ["voice in the dark"]},
+    {"q": "a parent's voice as a non-pharmacological anxiolytic", "piece": ["pebbble"], "expect": ["anxiolytic"]},
+    {"q": "the pebbles from Le Petit Poucet", "piece": ["pebbble"], "expect": ["Petit Poucet"]},
+    {"q": "the growth channel is paper", "piece": ["vrooom"], "expect": ["end in paper", "badges end in paper"]},
+    {"q": "build it so it lasts as long as it took the tree to grow", "piece": ["vrooom"], "expect": ["as long as it took the tree to grow"]},
+    {"q": "the phone is not the villain", "piece": ["vrooom"], "expect": ["phone is not the villain"]},
+    {"q": "the toy does not need the phone, the phone needs the parent", "piece": ["vrooom"], "expect": ["phone needs the parent"]}
+  ]
+}

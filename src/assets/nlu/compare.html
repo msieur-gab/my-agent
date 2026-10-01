@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Compare: what each way of cutting brings back</title>
+<style>
+  body { font: 15px/1.5 system-ui, sans-serif; margin: 20px; color: #1b1c1d; background: #f7f7f5; }
+  h1 { font-size: 20px; margin: 0 0 4px; } p.lead { margin: 0 0 14px; color: #65686a; max-width: 70em; }
+  form { display: flex; gap: 8px; margin-bottom: 8px; } input { flex: 1; font: inherit; font-size: 17px; padding: 10px 12px; border: 1px solid #bbb; }
+  button { font: inherit; padding: 0 18px; background: #1b1c1d; color: #fff; border: 0; cursor: pointer; }
+  #status { color: #65686a; min-height: 1.5em; }
+  .cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 10px; }
+  @media (max-width: 900px) { .cols { grid-template-columns: 1fr; } }
+  h2 { font-size: 15px; margin: 0 0 2px; } .how { color: #65686a; font-size: 13px; margin: 0 0 8px; min-height: 3.6em; }
+  .hit { background: #fff; border: 1px solid #dedfdc; padding: 10px 12px; margin-bottom: 8px; font-size: 14px; }
+  .hit.below { opacity: .5; } .meta { font-size: 12px; color: #65686a; margin-bottom: 4px; }
+  mark { background: #ffe9a8; padding: 0 1px; }
+</style>
+<h1>Compare: what each way of cutting my texts brings back</h1>
+<p class="lead">Type a question. The model in this browser reads it once, then the same question is ranked three ways.
+The three best passages are shown for each, with their score; the highlighted sentence is the extract each method would point at.
+Faded results are below that method's refusal floor: the page would not show them.</p>
+<form id="f"><input id="q" placeholder="e.g. restraint as a design skill" autofocus><button>Ask</button></form>
+<p id="status">Loading the model…</p>
+<div class="cols" id="cols"></div>
+<script src="/assets/js/match.js"></script>
+<script src="/assets/js/nlu.js"></script>
+<script>
+(async function () {
+  var status = document.getElementById('status'), cols = document.getElementById('cols');
+  var data, V;
+  try {
+    var t0 = performance.now();
+    await Nlu.warm();
+    data = await (await fetch('/assets/nlu/compare.json')).json();
+    V = new Int8Array(await (await fetch('/assets/nlu/compare.bin')).arrayBuffer());
+    status.textContent = 'Ready (model loaded in ' + Math.round(performance.now() - t0) + ' ms). Five texts: Senz, Dowgo, AutoFlow, Pebbble, Vrooom.';
+  } catch (e) { status.textContent = 'Could not load: ' + (e && e.message || e); return; }
+
+  var dim = data.dim;
+  function scores(set, q) {
+    var out = new Float32Array(set.count);
+    for (var r = 0; r < set.count; r++) { var s = 0, o = (set.start + r) * dim; for (var i = 0; i < dim; i++) s += q[i] * V[o + i]; out[r] = s / 127; }
+    return out;
+  }
+  function top(arr, n) { return Array.from(arr.keys()).sort(function (a, b) { return arr[b] - arr[a]; }).slice(0, n); }
+  function sentences(text) { return text.match(/[^.!?]+[.!?]+["”’)]*|\S[^.!?]*$/g) || [text]; }
+  /* brainboard's rule for the shown extract: the sentence sharing most words with the question */
+  function overlapBest(text, question) {
+    var q = {}; Match.terms(question).forEach(function (t) { q[t] = true; });
+    var best = null, bestN = -1;
+    sentences(text).forEach(function (s) { var n = Match.terms(s).filter(function (t) { return q[t]; }).length; if (n > bestN) { bestN = n; best = s; } });
+    return best;
+  }
+  function esc(s) { return s.replace(/[&<>]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; }); }
+  function card(item, score, floor, extract) {
+    var text = esc(item.text), e = extract && esc(extract.trim());
+    if (e && text.indexOf(e) !== -1) text = text.replace(e, '<mark>' + e + '</mark>');
+    return '<div class="hit' + (score < floor ? ' below' : '') + '"><div class="meta">' + esc(item.title) + ' · score ' + score.toFixed(2) +
+      (score < floor ? ' · below the floor ' + floor.toFixed(2) : '') + '</div>' + text + '</div>';
+  }
+  function column(title, how, html) { return '<div><h2>' + title + '</h2><p class="how">' + how + '</p>' + html + '</div>'; }
+
+  document.getElementById('f').addEventListener('submit', async function (ev) {
+    ev.preventDefault();
+    var question = document.getElementById('q').value.trim(); if (!question) return;
+    var t1 = performance.now(); var q = await Nlu.embed(question);
+    var S = data.sets, sb = scores(S.brainboard, q), sp = scores(S.paragraphs, q), ss = scores(S.sentences, q);
+
+    var a = top(sb, 3).map(function (i) { var it = S.brainboard.items[i]; return card(it, sb[i], S.brainboard.floor, overlapBest(it.text, question)); }).join('');
+    var b = top(sp, 3).map(function (i) { var it = S.paragraphs.items[i]; return card(it, sp[i], S.paragraphs.floor, overlapBest(it.text, question)); }).join('');
+
+    /* each paragraph scored by its best sentence, or by itself when that is higher */
+    var best = new Float32Array(S.paragraphs.count).fill(-1), arg = new Int32Array(S.paragraphs.count);
+    S.sentences.items.forEach(function (s, i) { if (ss[i] > best[s.passage]) { best[s.passage] = ss[i]; arg[s.passage] = i; } });
+    var blended = best.map(function (x, i) { return Math.max(x, sp[i]); });
+    var c = top(blended, 3).map(function (i) { return card(S.paragraphs.items[i], blended[i], S.sentences.floor, S.sentences.items[arg[i]].text); }).join('');
+
+    cols.innerHTML =
+      column('1 · Brainboard’s cut', 'Brainboard’s own chunker: sentences packed into passages of about 700 characters, embedded as brainboard ships them. Extract: the sentence sharing most words with the question.', a) +
+      column('2 · My paragraphs (what the page uses today)', 'Each paragraph is a passage, short ones joined to the next, piece title in front. Extract: same word rule.', b) +
+      column('3 · My paragraphs, matched by sentence', 'Every sentence has its own vector; a paragraph is scored by its best sentence. Extract: that sentence.', c);
+    status.textContent = '“' + question + '” read in ' + Math.round(performance.now() - t1) + ' ms.';
+  });
+})();
+</script>
+</html>
