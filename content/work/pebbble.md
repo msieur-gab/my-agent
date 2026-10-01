@@ -4,7 +4,6 @@ type: work
 context: self-initiated
 year: 2024–
 where: Self-initiated
-draft: true
 themes: [distance, privacy, screens]
 intro: Pebbble was born from that question.
 brief: "Separated families stay in touch with calls and messaging apps."

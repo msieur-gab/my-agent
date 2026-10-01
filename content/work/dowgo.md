@@ -4,7 +4,6 @@ type: work
 context: commissioned
 year: 2024
 where: Dowgo · two-week consulting engagement
-draft: true
 themes: [ideas, trust]
 intro: Dowgo was exactly that.
 brief: "Our due diligence data room needs to be better organised."

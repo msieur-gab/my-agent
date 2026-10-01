@@ -4,7 +4,6 @@ type: work
 context: commissioned
 year: 2018–21
 where: Allianz · Kaiser X Labs
-draft: true
 themes: [ideas, trust]
 intro: That's what Senz was about.
 brief: "We need to innovate faster."

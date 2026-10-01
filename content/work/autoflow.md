@@ -4,7 +4,6 @@ type: work
 context: self-initiated
 year: 2026–
 where: Independent project
-draft: true
 themes: [gdpr, trust, privacy]
 intro: AutoFlow is my answer to that.
 brief: "We need to be GDPR-compliant."

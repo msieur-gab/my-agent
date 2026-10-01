@@ -4,7 +4,6 @@ type: work
 context: self-initiated
 year: ""
 where: Self-initiated
-draft: true
 themes: [screens]
 intro: Vrooom came from that thought.
 brief: "Kids' games belong on screens."
