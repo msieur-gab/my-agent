@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Self-test: understanding by meaning</title>
+<style>
+  body { font: 15px/1.5 system-ui, sans-serif; margin: 24px; color: #1b1c1d; background: #f7f7f5; }
+  h1 { font-size: 20px; } table { border-collapse: collapse; margin-top: 12px; } td, th { padding: 4px 10px; text-align: left; border-bottom: 1px solid #ddd; }
+  .pass { color: #1a7f37; font-weight: 600; } .fail { color: #c62828; font-weight: 600; } #sum { font-size: 18px; margin: 12px 0; }
+</style>
+<h1>Self-test: does this browser understand questions the way the index was built?</h1>
+<p>It loads the model from this site, turns each test question into a vector, and compares with what Python
+produced when the index was built (<code>build/embed.py</code>): the vector should be nearly identical and the
+decision (a listed question, a passage, or nothing) the same.</p>
+<p id="sum">Loading the model…</p>
+<p id="meta"></p>
+<table id="rows"><tr><th></th><th>question</th><th>same vector</th><th>decision here</th><th>expected</th><th>score here / Python</th><th>ms</th></tr></table>
+<script>window.SITE_BASE = location.pathname.split('/assets/')[0];</script>
+<script src="../js/nlu.js"></script>
+<script>
+(async function () {
+  var sum = document.getElementById('sum'), meta = document.getElementById('meta'), rows = document.getElementById('rows');
+  try {
+    var t0 = performance.now();
+    var loaded = await Nlu.warm();
+    var loadMs = Math.round(performance.now() - t0);
+    var index = await Nlu.index();
+    var probes = await (await fetch('probe.json')).json();
+    meta.textContent = 'Worker version ' + loaded.version + ' · model ready in ' + loadMs + ' ms · index ' + index.fingerprint +
+      ' · ' + index.passages.length + ' passages, ' + index.questions.length + ' listed questions · floors: question ' +
+      index.floors.question + ', passage ' + index.floors.passage;
+    var pass = 0, worstCos = 1, worstGap = 0;
+    for (var p of probes) {
+      var t1 = performance.now();
+      var vec = await Nlu.embed(p.q);
+      var ms = Math.round(performance.now() - t1);
+      var cos = 0; for (var i = 0; i < vec.length; i++) cos += vec[i] * p.vec[i];
+      var r = Nlu.rank(index, index.vectors, vec);
+      var route = r.question ? 'question' : r.passages.length ? 'passage' : 'none';
+      var at = r.question ? r.question.index : r.passages.length ? r.passages[0].index : -1;
+      var score = r.question ? r.question.score : r.passages.length ? r.passages[0].score : r.best;
+      var ok = cos > 0.985 && route === p.route && at === p.index;
+      if (ok) pass++;
+      worstCos = Math.min(worstCos, cos); worstGap = Math.max(worstGap, Math.abs(score - p.score));
+      var tr = document.createElement('tr');
+      [ok ? 'PASS' : 'FAIL', p.q, cos.toFixed(4), route + (at >= 0 ? ' #' + at : ''), p.route + (p.index >= 0 ? ' #' + p.index : ''),
+       score.toFixed(3) + ' / ' + p.score.toFixed(3), ms].forEach(function (v, n) {
+        var td = document.createElement('td'); td.textContent = v; if (n === 0) td.className = ok ? 'pass' : 'fail'; tr.appendChild(td);
+      });
+      rows.appendChild(tr);
+    }
+    sum.textContent = (pass === probes.length ? 'PASS' : 'FAIL') + ': ' + pass + ' of ' + probes.length + ' questions decided as in Python. ' +
+      'Lowest vector agreement ' + worstCos.toFixed(4) + ', largest score difference ' + worstGap.toFixed(3) + '.';
+    sum.className = pass === probes.length ? 'pass' : 'fail';
+  } catch (e) {
+    sum.textContent = 'FAIL: ' + (e && e.message || e); sum.className = 'fail';
+  }
+})();
+</script>
+</html>

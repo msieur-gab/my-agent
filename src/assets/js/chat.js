@@ -7,7 +7,9 @@
    bottom of the screen once the conversation is longer than the screen (CSS, position: sticky). */
 (function () {
   /* Milliseconds. One place to tune how a reply feels. */
-  var PACE = { word: 38, line: 120, go: 900 };
+  var PACE = { word: 38, quick: 20, long: 60, line: 120, go: 900, patient: 350 };
+  /* word: per word; quick: per word once a line is longer than `long` words; patient: how long a reply
+     may take before the waiting dots show (they only ever show when the page is really waiting) */
 
   function el(tag, attrs, children) {
     var n = document.createElement(tag);
@@ -34,12 +36,22 @@
     var queue = Promise.resolve();
 
     /* `said` is what the visitor typed or tapped; empty when they tapped something without words.
-       getReply() is called when its turn comes, so replies are worked out in the order they were asked. */
+       getReply() is called when its turn comes, so replies are worked out in the order they were asked.
+       It returns the reply, or a promise of it when understanding the question takes a moment. */
     function round(said, label, getReply) {
       queue = queue.then(function () {
-        return show(turn(said, label), getReply());
+        var t = turn(said, label);
+        var done = waiting(t);
+        return Promise.resolve(getReply()).then(function (reply) { done(); return show(t, reply); }, function (e) { done(); throw e; });
       }).catch(function (e) { console.error(e); });
       return queue;
+    }
+
+    /* Three dots, only if the reply is not there after a moment. Returns the function that removes them. */
+    function waiting(t) {
+      var dots = el('p', { class: 'thinking', 'aria-hidden': 'true' }, [el('span'), el('span'), el('span')]);
+      var timer = setTimeout(function () { t.appendChild(dots); }, PACE.patient);
+      return function () { clearTimeout(timer); dots.remove(); };
     }
 
     function turn(said, label) {
@@ -73,8 +85,9 @@
       parent.appendChild(p);
       if (reduce) { p.textContent = text; return Promise.resolve(); }
       var words = text.split(' ').map(function (w) { return p.appendChild(el('span', { class: 'w', text: w + ' ' })); });
+      var step = words.length > PACE.long ? PACE.quick : PACE.word;
       return words.reduce(function (chain, w) {
-        return chain.then(function () { w.classList.add('on'); return wait(PACE.word); });
+        return chain.then(function () { w.classList.add('on'); return wait(step); });
       }, Promise.resolve());
     }
 

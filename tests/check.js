@@ -140,6 +140,47 @@ for (const [name, run, ok] of rounds) {
 }
 console.log(`conversation: ${roundPass}/${rounds.length}\n`);
 
+// Understanding by meaning (nlu.js). The model itself only runs in a browser (/assets/nlu/test.html);
+// here the ranking is checked with question vectors Python produced when the index was built.
+const Nlu = require('../src/assets/js/nlu.js');
+const nluDir = path.join(__dirname, '../src/assets/nlu');
+const nlu = JSON.parse(fs.readFileSync(path.join(nluDir, 'index.json'), 'utf8'));
+const vectors = new Int8Array(fs.readFileSync(path.join(nluDir, 'vectors.bin')).buffer.slice(0));
+const probes = JSON.parse(fs.readFileSync(path.join(nluDir, 'probe.json'), 'utf8'));
+const find = q => Nlu.rank(nlu, vectors, Float32Array.from(probes.find(p => p.q === q).vec));
+let rankPass = 0;
+for (const p of probes) {
+  const r = find(p.q);
+  const route = r.question ? 'question' : r.passages.length ? 'passage' : 'none';
+  const at = r.question ? r.question.index : r.passages.length ? r.passages[0].index : -1;
+  if (route === p.route && at === p.index) rankPass++; else console.log(`MISS ranking ${route} #${at} (want ${p.route} #${p.index}) ← ${p.q}`);
+}
+if (vectors.length !== (nlu.passages.length + nlu.questions.length) * nlu.dim) console.log('MISS vectors.bin does not match index.json');
+console.log(`ranking by meaning: ${rankPass}/${probes.length} decided as in Python (${nlu.passages.length} passages, ${nlu.questions.length} listed questions)`);
+
+// What the page replies once a question is understood by meaning.
+const meaning = Respond.create(pageData);
+const byMeaning = [
+  ['a rephrased question gets the paragraph my listed question points at',
+    () => meaning.ask('should we add AI to categorise our documents', find('should we add AI to categorise our documents')),
+    r => r.template === 'project' && /^Pattern matching, not AI categorisation/.test(r.says[0]) && r.link.href === base + '/work/dowgo/' && /^From Dowgo/.test(r.link.text)],
+  ['the reply offers other questions the same piece answers', () => meaning.ask('can a product grow without advertising', find('can a product grow without advertising')),
+    r => r.next.items.length === 3 && r.next.items.every(i => i.listed.slug === 'vrooom') && !r.next.items.some(i => i.text === 'Can a product grow without advertising?')],
+  ['a question no listed question covers gets the closest passage, said as such', () => meaning.ask('which technology stack was the Dowgo work delivered in', find('which technology stack was the Dowgo work delivered in')),
+    r => r.template === 'project' && r.says[0] === siteData.voice.closest && r.link.href === base + '/work/dowgo/'],
+  ['far off-topic gets the invitation, not a project', () => meaning.ask('how do I train for a marathon', find('how do I train for a marathon')), r => r.template === 'none'],
+  ['tapping a listed question shows its paragraph without the model', () => meaning.listed('senz', 'How do we make a design system adoptable?', nlu),
+    r => r.template === 'project' && /^Paper and pen/.test(r.says[0]) && r.link.href === base + '/work/senz/'],
+  ['small talk and commands still come first', () => meaning.ask('hello', { question: null, passages: [], best: 0 }), r => r.template === 'talk'],
+  ['without the model, the keyword logic still answers', () => { meaning.reset(); return meaning.ask('How can my team test an idea before we commit a budget?', null); }, r => r.template === 'project' && /^Senz is about/.test(r.says[0])],
+];
+let meanPass = 0;
+for (const [name, run, ok] of byMeaning) {
+  const r = run();
+  if (ok(r)) meanPass++; else console.log(`MISS by meaning: ${name} → ${JSON.stringify(r).slice(0, 200)}`);
+}
+console.log(`replies by meaning: ${meanPass}/${byMeaning.length}\n`);
+
 const redactions = [
   'Hi, I\'m Anna Schmidt from Example GmbH, reach me at anna@example.com or +49 170 1234567.',
   'We at Northwind need help with GDPR. See https://northwind.example/brief',

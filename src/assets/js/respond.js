@@ -25,9 +25,10 @@
     var bySlug = {};
     pieces.forEach(function (p) { bySlug[p.slug] = p; });
 
-    /* Memory, for this visit only: what was shown, what else was close, which project the talk is on. */
-    var seen, pool, focus, lastNone = -1;
-    function reset() { seen = {}; pool = []; focus = null; }
+    /* Memory, for this visit only: what was shown, what else was close, which project the talk is on,
+       and which of my listed questions were already asked. */
+    var seen, pool, focus, asked, lastNone = -1;
+    function reset() { seen = {}; pool = []; focus = null; asked = {}; }
     reset();
 
     function unseen(list) { return list.filter(function (p) { return p && !seen[p.slug]; }); }
@@ -44,7 +45,24 @@
         says: [lead, aboutLine(p)].filter(Boolean),
         why: why || null,
         link: storyLink(p),
-        next: questions(unseen(pool).slice(0, 3), voice.also),
+        next: (p.questions || []).length ? listed(p) : questions(unseen(pool).slice(0, 3), voice.also),
+        invite: true
+      };
+    }
+
+    /* One of my own paragraphs answers: the paragraph itself, where it comes from, and what else
+       that piece answers. `lead` is said first when the match is only the closest passage. */
+    function passage(x, lead, question) {
+      var p = bySlug[x.slug];
+      seen[p.slug] = true;
+      focus = p.slug;
+      pool = related(p, []);
+      if (question) asked[question] = true;
+      return {
+        template: 'project',
+        says: [lead, x.text].filter(Boolean),
+        link: { text: voice.fromPiece.replace('{title}', p.title), href: p.url },
+        next: listed(p),
         invite: true
       };
     }
@@ -97,6 +115,14 @@
       }) };
     }
 
+    /* The questions a piece lists in its front matter, minus the ones already asked in this visit. */
+    function listed(p) {
+      var items = (p.questions || []).filter(function (x) { return !asked[x.q]; }).slice(0, 3).map(function (x) {
+        return { text: x.q, listed: { slug: p.slug, q: x.q }, said: true };
+      });
+      return { label: voice.alsoAnswers.replace('{title}', p.title), items: items };
+    }
+
     function topics(label) {
       return { label: label, items: site.themes.map(function (t) { return { text: t.label, theme: t.id, said: true }; }) };
     }
@@ -127,9 +153,10 @@
 
     /* ---------- what the visitor can do ---------- */
 
-    /* They typed something. In order: a project asked for by name, a topic by name,
-       talk, then a search through the work. */
-    function ask(text) {
+    /* They typed something. In order: a project asked for by name, a topic by name, talk,
+       then a search through the work: by meaning when the model answered (`found`, see nlu.js),
+       by keywords when it did not. */
+    function ask(text, found) {
       var cmd = Match.command(text, pieces, focus);
       if (cmd) return cmd.action === 'open' ? open(cmd.slug) : pick(cmd.slug);
 
@@ -140,7 +167,13 @@
       if (kind) return small(kind);
 
       var v = Match.verdict(Match.search(index, text));
-      if (v.kind === 'none') return Match.wantsList(text) ? everything() : none(text);
+      if (v.kind === 'none' && Match.wantsList(text)) return everything();
+      if (found) {
+        if (found.question) return passage(found.question.passage, null, found.question.q);
+        if (found.passages.length) return passage(found.passages[0], voice.closest);
+        return none(text);
+      }
+      if (v.kind === 'none') return none(text);
       var ok = v.results.filter(function (r) { return r.score >= Match.PARTIAL; });
       var top = ok[0];
       var others = ok.slice(1).map(function (r) { return r.piece; });
@@ -176,6 +209,12 @@
       return bySlug[slug] ? project(bySlug[slug]) : nothingLeft();
     }
 
+    /* One of my listed questions was tapped: the paragraph it points at. `nlu` is the prepared index. */
+    function listedQuestion(slug, q, nlu) {
+      var e = nlu.questions.filter(function (x) { return x.slug === slug && x.q === q; })[0];
+      return e ? passage(nlu.passages[e.passage], null, q) : pick(slug);
+    }
+
     /* "Open Senz", "show me" once it has been presented: say so, then go to its page. */
     function open(slug) {
       var p = bySlug[slug];
@@ -200,7 +239,7 @@
       return choice(voice.all, work, { text: voice.allLink, href: base + '/work/' });
     }
 
-    return { ask: ask, pick: pick, theme: theme, reset: reset };
+    return { ask: ask, pick: pick, theme: theme, listed: listedQuestion, reset: reset };
   }
 
   var api = { create: create };

@@ -9,6 +9,10 @@ Visitors ask a question or pick a theme; the page answers with a piece of work, 
 python3 build/build.py        # builds the site into public/
 cd public && python3 -m http.server 8000
 node tests/check.js           # checks matching and redaction (after a build)
+
+# after changing a piece's text or its questions (needs onnxruntime, tokenizers, numpy):
+~/dev/nlu-comparison/.venv/bin/python build/embed.py   # rebuilds the search index in src/assets/nlu/
+# then open http://localhost:8000/assets/nlu/test.html to check the browser agrees with it
 ```
 
 No dependencies.
@@ -30,6 +34,11 @@ content/work/*.md        one file per project
 content/notes/*.md       one file per note
 content/pages/*.md       plain pages (how this site works)
 src/assets/js/match.js   understands what was typed: search, typos, small talk, commands
+src/assets/js/nlu.js     understands a question by meaning, with a small model in the visitor's browser
+src/assets/js/nlu.worker.js  runs that model off the main thread
+src/assets/nlu/          the prepared index: my passages and listed questions as vectors (built by build/embed.py)
+src/assets/models/, src/assets/vendor/  the model and its runtime, served from this site (43 MB)
+build/passages.py        how my texts are cut into passages (shared by the index, the build and the experiment)
 src/assets/js/respond.js decides the reply, as one of four templates (project, choice, talk, none)
 src/assets/js/chat.js    shows a reply, always in the same order; looks after the question field
 src/assets/js/send.js    the form that reaches me

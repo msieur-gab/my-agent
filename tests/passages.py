@@ -22,7 +22,7 @@ Mind the bias: the listed questions are drafts by Claude, who also wrote the tes
 
 Needs onnxruntime, tokenizers, numpy and local copies of the models. On Gab's machine:
   ~/dev/nlu-comparison/.venv/bin/python tests/passages.py [minilm] [gte-small] [-v]
-Models are read from brainboard / nlu-comparison; nothing is written anywhere.
+MiniLM is the copy the page loads (src/assets/models/); gte-small is read from nlu-comparison. Nothing is written.
 Scores here are float cosines from native kernels: good for comparing variants, but an absolute
 floor must be confirmed in the browser (knowledge/retrieval/local-embedding-harness.md)."""
 import glob, json, os, re, sys
@@ -30,7 +30,7 @@ import numpy as np, onnxruntime as ort
 from tokenizers import Tokenizer
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-MODELS = {"minilm": "/home/gab/dev/brainboard/app/models/Xenova/all-MiniLM-L6-v2",
+MODELS = {"minilm": f"{ROOT}/src/assets/models/Xenova/all-MiniLM-L6-v2",     # the file the page itself loads
           "gte-small": "/home/gab/dev/nlu-comparison/models/Xenova/gte-small"}
 VERBOSE = "-v" in sys.argv
 
@@ -51,50 +51,16 @@ def load(path):
         return np.concatenate(out)
     return embed
 
-# ---------- my texts, cut into passages ----------
-def plain(block):
-    block = re.sub(r"^\s*([-*]|>)\s*", "", block, flags=re.M)             # list marks, quote marks
-    block = re.sub(r"^#+\s*", "", block, flags=re.M)                      # heading marks
-    block = re.sub(r"\[([^\]]+)\]\([^)]*\)", r"\1", block)                # links keep their label
-    return " ".join(re.sub(r"[*_`]", "", block).split())
+# ---------- my texts, cut into passages: the same cutter that builds the page's index ----------
+sys.path.insert(0, f"{ROOT}/build")
+import passages as cut
 
-def sentences(text, limit=1000):
-    """A long paragraph is cut at sentence ends into parts of at most `limit` characters."""
-    parts, cur = [], ""
-    for s in re.split(r"(?<=[.!?])\s+", text):
-        if cur and len(cur) + len(s) + 1 > limit: parts.append(cur); cur = s
-        else: cur = (cur + " " + s).strip()
-    return parts + [cur] if cur else parts
-
-def passages_of(body, skip=()):
-    out, carry, section, dropping = [], "", "", False
-    for block in re.split(r"\n\s*\n", body.strip()):
-        block = block.strip()
-        if not block: continue
-        if block.startswith("## "):
-            section = block.split("\n")[0][3:].strip(); dropping = section in skip
-        if dropping: continue
-        text = plain(block)
-        if block.startswith("#") or len(text) < 120:      # headings and very short paragraphs join the next
-            carry = (carry + " " + text).strip(); continue
-        text = (carry + " " + text).strip(); carry = ""
-        out += [(section, t) for t in sentences(text)]
-    if carry: out.append((section, carry))
-    return out
-
-PIECES, QUESTIONS = {}, []          # QUESTIONS: (slug, the question in the piece's front matter, where it points)
-for f in sorted(glob.glob(f"{ROOT}/content/work/*.md")):
-    _, fm, body = open(f).read().split("---", 2)
-    slug = os.path.basename(f)[:-3]
-    PIECES[slug] = (re.search(r"^title:\s*(.+)$", fm, re.M).group(1).strip(), body)
-    QUESTIONS += [(slug, q.strip(), see.strip()) for q, see in re.findall(r"^  - q: (.+)\n    see: (.+)$", fm, re.M)]
+PIECES = cut.load_pieces(ROOT)
+QUESTIONS = [(slug, q, see) for slug, p in PIECES.items() for q, see in p["questions"]]   # (slug, question, where it points)
 
 def corpus(title=True, skip=()):
-    out = []                                   # (slug, section, passage as shown, text as embedded)
-    for slug, (name, body) in PIECES.items():
-        for section, text in passages_of(body, skip):
-            out.append((slug, section, text, f"{name}. {text}" if title else text))
-    return out
+    """→ [(slug, section, passage text, text as embedded)]"""
+    return [(x["slug"], x["section"], x["text"], x["embed"]) for x in cut.corpus(PIECES, title, skip)]
 
 H = json.load(open(f"{ROOT}/tests/held-out.json"))
 ANS, NEAR, FAR, REQ = H["answerable"], [n["q"] for n in H["near"]], H["far"], H["requests"]

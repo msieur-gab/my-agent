@@ -267,14 +267,14 @@ def build_home(site, work, notes):
     ld = {"@context": "https://schema.org", "@type": "Person", "name": site["name"],
           "jobTitle": site["role"], "url": site["baseUrl"], "address": site["location"]}
     return page(site, site["name"], body, description=site["opening"], path="/",
-                scripts=["/assets/js/match.js", "/assets/js/redact.js", "/assets/js/respond.js", "/assets/js/chat.js",
+                scripts=["/assets/js/match.js", "/assets/js/redact.js", "/assets/js/nlu.js", "/assets/js/respond.js", "/assets/js/chat.js",
                          "/assets/js/send.js", "/assets/js/intro.js", "/assets/js/agent.js"],
                 json_ld=ld, body_class="is-home")
 
 
 def public_piece(p):
     keep = ("slug", "type", "title", "url", "where", "year", "date", "context", "themes",
-            "intro", "about", "brief", "question", "answer", "keywords", "answers")
+            "intro", "about", "brief", "question", "answer", "keywords", "answers", "questions")
     out = {k: p.get(k) for k in keep if p.get(k) not in (None, "")}
     if "url" in out:
         out["url"] = BASE + out["url"]
@@ -364,6 +364,19 @@ def write(rel, text):
     path.write_text(text, encoding="utf-8")
 
 
+def stale_index_warning():
+    """The page searches an index of my passages and listed questions, built separately (build/embed.py,
+    which needs the model). Say so when the content has changed since."""
+    import passages as cut
+    pieces = cut.load_pieces(ROOT)
+    passages = cut.corpus(pieces)
+    now = cut.fingerprint(passages, cut.listed_questions(pieces, passages))
+    path = SRC / "assets" / "nlu" / "index.json"
+    built = json.loads(path.read_text(encoding="utf-8"))["fingerprint"] if path.exists() else None
+    if built != now:
+        print("NOTE: content changed since the search index was built. Run build/embed.py, then build again.")
+
+
 def main():
     site = load_site()
     work = load_pieces("work", "work")
@@ -373,6 +386,7 @@ def main():
         shutil.rmtree(OUT)
     shutil.copytree(SRC / "assets", OUT / "assets")
 
+    stale_index_warning()
     write("index.html", build_home(site, work, notes))
     for p in work + notes:
         write(p["url"].strip("/") + "/index.html", build_piece(site, p))

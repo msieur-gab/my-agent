@@ -53,9 +53,39 @@ Every reply is one of four templates, and all four are shown the same way.
 Shown in this order, whatever the template:
 what the agent says → why ("you mentioned …") → cards → form → link → what to do next → the invitation.
 
+## How a typed question is understood (branch `feat/nlu`)
+
+In order, and the first that applies wins:
+
+1. **A project asked for by name, or "show me", "open it".** By its words (`match.js`).
+2. **A topic by its name, small talk, "show me all your work".** By its words.
+3. **By meaning** (`nlu.js`): a small model in the visitor's browser (all-MiniLM-L6-v2, 23 MB, served from
+   this site, loaded when the visitor clicks into the question field) turns the question into a vector and
+   compares it with vectors prepared ahead of time:
+   - one of the **questions I listed** in a piece is close enough → the paragraph of mine it points at;
+   - else a **passage** of my texts is close enough → that passage, introduced as "the closest I have written";
+   - else → the invitation to send me the question.
+4. **By keywords**, only when the model is not available (not loaded within six seconds, failed, old browser).
+
+"Close enough" is a floor measured when the index is built: just above the score any far off-topic question
+reaches. Each reply by meaning shows my own paragraph, says which piece it comes from, and offers three other
+questions that piece answers. Tapping a listed question needs no model: its paragraph is in the index.
+
+Each piece lists its questions in its front matter, each pointing at the paragraph that answers it:
+
+```yaml
+questions:
+  - q: How do we make a design system adoptable?
+    see: Paper and pen. The most radical        # the opening words of the paragraph
+```
+
+After changing a text or its questions, rebuild the index with `build/embed.py`; the site build says when
+that is needed. `/assets/nlu/test.html` checks that the browser agrees with the index.
+
 ## How the code is split
 
 - `match.js` understands what was typed: search with an evidence rule, typos, small talk, commands.
+- `nlu.js` and `nlu.worker.js` understand a question by meaning; `build/embed.py` prepares what they compare it with.
 - `respond.js` decides the reply and returns it as plain data, one of the four templates. No page code,
   so `tests/check.js` runs whole conversations against it.
 - `chat.js` shows any reply in the fixed order above and looks after the question field. It knows
