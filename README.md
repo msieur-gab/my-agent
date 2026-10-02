@@ -34,7 +34,6 @@ src/assets/js/respond.js decides the reply, as one of four templates (project, c
 src/assets/js/chat.js    shows a reply, always in the same order; looks after the question field
 src/assets/js/send.js    the form that reaches me
 src/assets/js/redact.js  removes names and contact details before anything is sent
-src/assets/js/intro.js   the opening lines, shown one after another
 src/assets/js/agent.js   wires the above together
 build/build.py           content → static, crawlable pages + answers.json, sitemap, robots.txt, llms.txt
 docs/                    site foundation, interaction model and the questions log

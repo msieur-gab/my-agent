@@ -3,7 +3,6 @@
      respond.js  decides the reply, as one of four templates
      chat.js     shows it, always in the same order
      send.js     the form that reaches me
-     intro.js    the opening lines
    Nothing is generated; nothing is stored on the device. */
 (function () {
   var dataEl = document.getElementById('answers');
@@ -34,7 +33,6 @@
     form: document.getElementById('ask'),
     input: document.getElementById('q'),
     composer: document.getElementById('composer'),
-    intro: document.getElementById('intro'),
     restart: document.getElementById('restart'),
     invite: site.softInvite,
     onAsk: function (text) {
@@ -47,7 +45,6 @@
   });
 
   function round(said, label, getReply) {
-    if (window.Intro) Intro.finish(); /* asking ends the intro */
     if (said) lastSaid = said;
     chat.round(said, label, getReply);
   }
@@ -64,7 +61,7 @@
     round(said, 'You picked', function () { return brain.pick(item.pick); });
   }
 
-  /* The topic cards under the intro. */
+  /* The topic cards that open the conversation. */
   document.querySelectorAll('#themes .chip').forEach(function (chip) {
     chip.addEventListener('click', function (e) {
       e.preventDefault();

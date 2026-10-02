@@ -15,7 +15,9 @@
     "Asking questions finds the root cause behind them.",
     "Then the solution changes how the system works, instead of patching and polishing the wrong fix."
   ],
+  "toTalk": "Ask yours ↓",
   "invite": "Which of these sounds like yours? Or ask in your own words.",
+  "closing": "Didn't find your question here? Send it to me. I answer every message myself.",
   "placeholder": "e.g. Can we use AI and still pass GDPR?",
   "honesty": "Answers come only from my own work and views. If I haven't done something, I'll say so. No cookies.",
 

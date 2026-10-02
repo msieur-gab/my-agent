@@ -187,13 +187,12 @@ def page(site, title, body, description="", path="/", scripts=(), json_ld=None, 
 <link rel="canonical" href="{e(site['baseUrl'].rstrip('/') + path)}">
 <link rel="preload" href="/assets/fonts/InstrumentSans-var.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/assets/css/site.css">
-<script>document.documentElement.classList.add('js')</script>
 {ld}
 </head>
 <body class="{body_class}">
 <a class="skip" href="#main">Skip to content</a>
-<header class="top">
-  <a class="home" href="/">{e(site['name'])}</a>
+<header>
+  <a href="/">{e(site['name'])}</a>
   <nav aria-label="Main">
     <a href="/work/">Work</a>
     <a href="/notes/">Notes</a>
@@ -203,9 +202,9 @@ def page(site, title, body, description="", path="/", scripts=(), json_ld=None, 
 <main id="main">
 {body}
 </main>
-<footer class="foot">
-  <span>© 2026 {e(site['name'])} · {e(site['location'])}</span>
-  <span>{contact_links(site)}</span>
+<footer>
+  <h2>{e(site['closing'])}</h2>
+  <p>{contact_links(site)}<br>© 2026 {e(site['name'])} · {e(site['location'])}</p>
 </footer>
 {js}
 </body>
@@ -248,27 +247,29 @@ def build_home(site, work, notes, views):
     }
     data_json = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
     body = f"""
-<section class="col open" id="intro">
-  <div class="stage" id="stage">
-    <p class="who">{e(site['who'])}</p>
-    <h1>{e(site['opening'])}</h1>
-    {''.join(f"<p>{e(line)}</p>" for line in site['stance'])}
-    <p class="invite">{e(site['invite'])}</p>
+<section id="intro">
+  <h1>{e(site['opening'])}</h1>
+  <div>
+    <p>{e(site['who'])}</p>
+    <p>{e(' '.join(site['stance']))}</p>
+    <a href="#talk">{e(site['toTalk'])}</a>
   </div>
-  <div class="themes" id="themes">{''.join(chips)}</div>
 </section>
 
-<section class="col thread" id="thread" aria-live="polite"></section>
-<div class="col restart-wrap"><button type="button" class="linkbtn restart" id="restart">Start over</button></div>
-
-<div class="composer" id="composer"><div class="col">
-  <form class="ask" id="ask" role="search" action="/work/">
-    <label for="q" class="sr">Your question</label>
-    <input id="q" name="q" type="text" autocomplete="off" placeholder="{e(site['placeholder'])}">
-    <button type="submit">Ask</button>
-  </form>
-  <p class="honesty">{e(site['honesty'])} <a href="/how-this-site-works/">How this works</a></p>
-</div></div>
+<section id="talk">
+  <h2>{e(site['invite'])}</h2>
+  <div class="themes" id="themes">{''.join(chips)}</div>
+  <div class="thread" id="thread" aria-live="polite"></div>
+  <div class="restart-wrap"><button type="button" class="linkbtn restart" id="restart">Start over</button></div>
+  <div class="composer" id="composer">
+    <form class="ask" id="ask" role="search" action="/work/">
+      <label for="q" class="sr">Your question</label>
+      <input id="q" name="q" type="text" autocomplete="off" placeholder="{e(site['placeholder'])}">
+      <button type="submit">Ask</button>
+    </form>
+    <p class="honesty">{e(site['honesty'])} <a href="/how-this-site-works/">How this works</a></p>
+  </div>
+</section>
 
 <form name="question" data-netlify="true" netlify-honeypot="bot-field" hidden>
   <input name="question"><input name="email"><input name="bot-field">
@@ -279,7 +280,7 @@ def build_home(site, work, notes, views):
           "jobTitle": site["role"], "url": site["baseUrl"], "address": site["location"]}
     return page(site, site["name"], body, description=site["opening"], path="/",
                 scripts=["/assets/js/match.js", "/assets/js/redact.js", "/assets/js/respond.js", "/assets/js/chat.js",
-                         "/assets/js/send.js", "/assets/js/intro.js", "/assets/js/agent.js"],
+                         "/assets/js/send.js", "/assets/js/agent.js"],
                 json_ld=ld, body_class="is-home")
 
 

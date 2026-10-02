@@ -6,13 +6,18 @@ Everything stays extractive: every sentence the page says is written in `content
 
 ## The home page, in order
 
-1. **The intro tells a short story.** Its lines show one after another in the same place: who I am,
-   the claim, the stance (symptoms, root cause, the wrong fix), then the question that leads to the
-   topic cards. A tap moves on; the marks below go back. The question field is there from the start,
-   and asking ends the intro. (`intro.js`)
-2. **The question field stays within reach.** It sits under the intro at rest and is held at the
-   bottom of the screen once the conversation is longer than the screen. It glides there. The intro
-   stays on the page, above the conversation.
+1. **The page is a sheet of sections lying on the footer** (2 October 2026). The intro, then the
+   conversation, each at least one screen tall; another section can be added between them. Each
+   one pushes the one before it up. The footer waits underneath, held at the bottom of the screen,
+   and shows once the end of the conversation has lifted past it. Each section catches gently at
+   its top when the scroll settles near it; inside a long conversation the scroll stays free.
+   - **The intro shows everything at once**, on a grid: the claim top left, who I am and the
+     stance bottom right, with a link down to the conversation.
+   - **The conversation** opens on the question that leads to the topic cards.
+   - **The footer** uses the same grid: a closing line top left, contact bottom right.
+2. **The question field stays within reach.** It sits under the topic cards at rest and is held at
+   the bottom of the screen once the conversation is longer than the screen. It glides there. It
+   belongs to the conversation's section and leaves with it, so it never sits on the footer.
 3. **Things arrive, they don't pop.** Messages, replies and choices fade in with a slight rise.
 
 ## The conversation
@@ -60,7 +65,7 @@ what the agent says → why ("you mentioned …") → cards → form → link �
   so `tests/check.js` runs whole conversations against it.
 - `chat.js` shows any reply in the fixed order above and looks after the question field. It knows
   nothing about the content.
-- `send.js` is the form. `intro.js` is the opening. `agent.js` wires them together.
+- `send.js` is the form. `agent.js` wires them together.
 
 A new kind of answer is a new template function in `respond.js`; the look stays in one place, `chat.js`.
 

@@ -21,7 +21,9 @@
 }
 
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; scroll-padding-top: 76px; -webkit-text-size-adjust: 100%; } /* scrolled-to content lands below the fixed header */
+/* Scrolled-to content lands below the fixed header. Each section catches at its top when the
+   scroll settles near it; inside a section taller than the screen the scroll stays free. */
+html { scroll-behavior: smooth; scroll-padding-top: var(--top-h, 60px); scroll-snap-type: y proximity; -webkit-text-size-adjust: 100%; }
 body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 18px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
 a { color: var(--link); text-underline-offset: 4px; text-decoration-thickness: 1px; }
 :focus-visible { outline: 2px solid var(--link); outline-offset: 3px; }
@@ -30,43 +32,44 @@ a { color: var(--link); text-underline-offset: 4px; text-decoration-thickness: 1
 .skip:focus { left: 16px; top: 16px; background: var(--surface); padding: 8px 12px; z-index: 10; }
 .gap { color: var(--link); border-bottom: 1px dashed var(--link); }
 
-/* header & footer */
+/* header */
 /* The header stays at the top of the screen on every page. */
-.top { position: sticky; top: 0; z-index: 6; display: flex; justify-content: space-between; align-items: baseline; gap: 6px 16px; flex-wrap: wrap; padding: 16px var(--gutter); background: var(--bg); }
+body > header { position: sticky; top: 0; z-index: 6; display: flex; justify-content: space-between; align-items: baseline; gap: 6px 16px; flex-wrap: wrap; padding: 16px var(--gutter); background: var(--bg); }
 /* What scrolls under it fades out just below, the way it does above the question field. */
-.top::after { content: ""; position: absolute; left: 0; right: 0; top: 100%; height: 18px; background: linear-gradient(to bottom, var(--bg), transparent); pointer-events: none; }
-.top .home { color: var(--fg); text-decoration: none; font-weight: 500; font-size: 16px; }
-.top nav { display: flex; gap: clamp(14px, 3vw, 28px); flex-wrap: wrap; }
-.top nav a { color: var(--muted); text-decoration: none; font-size: 15px; }
-.top nav a:hover { color: var(--fg); }
-.foot { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 32px var(--gutter) 40px; color: var(--muted); font-size: 14px; border-top: 1px solid var(--faint); margin-top: 64px; }
-.foot .addr { user-select: all; color: var(--fg); }
+body > header::after { content: ""; position: absolute; left: 0; right: 0; top: 100%; height: 18px; background: linear-gradient(to bottom, var(--bg), transparent); pointer-events: none; }
+body > header > a { color: var(--fg); text-decoration: none; font-weight: 500; font-size: 16px; }
+body > header nav { display: flex; gap: clamp(14px, 3vw, 28px); flex-wrap: wrap; }
+body > header nav a { color: var(--muted); text-decoration: none; font-size: 15px; }
+body > header nav a:hover { color: var(--fg); }
+
+/* The page is a sheet lying on the footer. The footer waits underneath, held at the bottom of
+   the screen, and shows once the end of the page has lifted past it. */
+main { position: relative; z-index: 1; background: var(--bg); border-bottom: 1px solid var(--faint); }
+body > footer { position: sticky; bottom: 0; min-height: 70svh; background: var(--soft); }
+/* Each section of a page fills the screen below the header. Another one can be added between
+   any two: it needs no class. */
+main > section { min-height: calc(100svh - var(--top-h, 60px)); scroll-snap-align: start; }
+body > footer { scroll-snap-align: end; }
+
+/* The intro and the footer share one grid: a large line top left, the rest bottom right. */
+#intro, body > footer { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 48px 16px; align-content: space-between; padding: clamp(28px, 6vh, 72px) var(--gutter) clamp(28px, 6vh, 56px); }
+#intro > *, body > footer > * { grid-column: 1 / span 9; margin: 0; }
+#intro > :last-child, body > footer > :last-child { grid-column: 7 / -1; }
+#intro h1 { font-size: clamp(40px, 7vw, 104px); line-height: 1; }
+#intro div { display: flex; flex-direction: column; align-items: flex-start; gap: 16px; font-size: clamp(19px, 1.7vw, 24px); line-height: 1.4; }
+#intro p { margin: 0; }
+#intro a { margin-top: 8px; padding: 11px 20px; font-size: 16px; font-weight: 500; color: var(--bg); background: var(--fg); text-decoration: none; }
+#intro a:hover { background: var(--link); }
+h2 { margin: 0; font-weight: 500; font-size: clamp(26px, 3.6vw, 38px); line-height: 1.15; letter-spacing: -0.02em; text-wrap: balance; }
+body > footer p { color: var(--muted); font-size: 15px; line-height: 2; }
+body > footer .addr { user-select: all; color: var(--fg); }
 
 .col { max-width: 760px; margin: 0 auto; padding-inline: clamp(16px, 5vw, 32px); }
 
-/* opening */
-.open { padding-block: clamp(28px, 6vh, 72px) 24px; display: flex; flex-direction: column; gap: 22px; }
 h1 { margin: 0; font-weight: 500; font-size: clamp(36px, 5.6vw, 60px); line-height: 1.06; letter-spacing: -0.025em; text-wrap: balance; }
-/* The intro lines. Stacked by default (no JavaScript, reduced motion). */
-.stage { display: flex; flex-direction: column; gap: 22px; }
-.stage p { margin: 0; max-width: 34em; font-size: clamp(19px, 2vw, 22px); line-height: 1.45; }
-.stage .who { font-size: 16px; color: var(--muted); }
-.stage .invite { font-weight: 500; }
 
-/* With JavaScript and motion: one line at a time, in the same place, ending on the question. */
-@media (prefers-reduced-motion: no-preference) {
-  .js .stage { display: grid; align-items: end; min-height: clamp(150px, 24vh, 240px); cursor: pointer; }
-  .js .done .stage { cursor: auto; }
-  .js .stage > * { grid-area: 1 / 1; max-width: none; color: var(--fg); font-weight: 500; font-size: clamp(27px, 4.2vw, 46px); line-height: 1.14; letter-spacing: -0.02em; text-wrap: balance; opacity: 0; transform: translateY(10px); transition: opacity .3s ease, transform .3s ease; }
-  .js .stage > .was-on { transform: translateY(-10px); }
-  .js .stage > .is-on { opacity: 1; transform: none; transition: opacity .55s ease .3s, transform .55s cubic-bezier(.2, .8, .2, 1) .3s; }
-  .js .steps { display: flex; gap: 6px; }
-  .js .steps button { width: 22px; height: 24px; padding: 0; border: 0; background: none; cursor: pointer; }
-  .js .steps button::before { content: ""; display: block; height: 3px; border-radius: 2px; background: var(--faint); transition: background .3s ease; }
-  .js .steps button.is-on::before { background: var(--fg); }
-  .js .open .themes { opacity: 0; visibility: hidden; transition: opacity .6s ease .5s, visibility 0s linear .5s; }
-  .js .open.done .themes { opacity: 1; visibility: visible; }
-}
+/* the conversation's own section: one reading column */
+#talk { max-width: 760px; margin: 0 auto; padding: clamp(28px, 6vh, 72px) clamp(16px, 5vw, 32px) 0; display: flex; flex-direction: column; gap: 22px; }
 
 .ask { display: flex; gap: 10px; align-items: stretch; border-bottom: 1.5px solid var(--fg); padding-bottom: 6px; margin-top: 8px; }
 .ask input { flex: 1 1 auto; min-width: 0; font: inherit; font-size: clamp(19px, 2vw, 22px); color: var(--fg); background: transparent; border: 0; padding: 10px 0; }
@@ -82,16 +85,16 @@ h1 { margin: 0; font-weight: 500; font-size: clamp(36px, 5.6vw, 60px); line-heig
 .chip:hover { border-color: var(--fg); }
 .chip[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
 
-/* The question field: in its place under the intro at rest, held at the bottom of the screen
-   as soon as the conversation is longer than the screen. The intro stays on the page, above. */
-.composer { position: sticky; bottom: 0; z-index: 5; padding-top: 20px; background: linear-gradient(to bottom, transparent, var(--bg) 20px); }
-.composer .col { display: flex; flex-direction: column; gap: 10px; padding-bottom: max(14px, env(safe-area-inset-bottom)); }
+/* The question field: in its place under the topic cards at rest, held at the bottom of the
+   screen as soon as the conversation is longer than the screen. It belongs to the conversation's
+   section and leaves with it, so it never sits on the footer. */
+.composer { position: sticky; bottom: 0; z-index: 5; display: flex; flex-direction: column; gap: 10px; padding: 20px 0 max(14px, env(safe-area-inset-bottom)); background: linear-gradient(to bottom, transparent, var(--bg) 20px); }
 .composer .ask { margin-top: 0; }
 
 /* the conversation */
 .thread { display: flex; flex-direction: column; gap: 40px; padding-block: 8px 24px; }
 .thread:empty { display: none; }
-.turn { display: flex; flex-direction: column; gap: 18px; }
+.turn { display: flex; flex-direction: column; gap: 18px; scroll-margin-top: 16px; }
 /* Room under the newest turn, so the visitor's message can rise to the top of the screen. */
 .turn:last-child { min-height: calc(100dvh - var(--top-h, 60px) - var(--composer-h, 120px) - 56px); }
 /* Whatever joins the conversation arrives, it doesn't pop. */
@@ -165,13 +168,16 @@ h1 { margin: 0; font-weight: 500; font-size: clamp(36px, 5.6vw, 60px); line-heig
 .draft { margin: 0; align-self: flex-start; font-size: 13px; color: var(--link); border: 1px dashed var(--link); padding: 4px 10px; border-radius: 999px; }
 .trio { display: flex; flex-direction: column; gap: 18px; padding-block: 8px 24px; border-bottom: 1px solid var(--faint); }
 .story { max-width: 36em; }
-.story h2 { font-weight: 500; font-size: 24px; letter-spacing: -0.01em; margin: 40px 0 8px; }
+.story h2 { font-size: 24px; line-height: 1.6; letter-spacing: -0.01em; margin: 40px 0 8px; }
 .story p, .story ul { margin: 0 0 14px; }
 .story li { margin-bottom: 6px; }
 .after { margin: 16px 0 0; font-size: 17px; }
 
+@media (max-width: 760px) {
+  #intro > *, #intro > :last-child, body > footer > *, body > footer > :last-child { grid-column: 1 / -1; }
+}
+
 @media (max-width: 560px) {
-  html { scroll-padding-top: 104px; } /* the header wraps to two lines */
   .index a { grid-template-columns: minmax(0, 1fr); }
   .index .m { grid-column: 1; }
   .you { max-width: 100%; }

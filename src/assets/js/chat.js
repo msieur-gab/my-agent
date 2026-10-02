@@ -3,7 +3,7 @@
 
      what the agent says → why → cards → form → link → what to do next → the invitation
 
-   It also looks after the question field, which rests under the intro and is held at the
+   It also looks after the question field, which rests under the topic cards and is held at the
    bottom of the screen once the conversation is longer than the screen (CSS, position: sticky). */
 (function () {
   /* Milliseconds. One place to tune how a reply feels. */
@@ -21,7 +21,7 @@
     return n;
   }
 
-  /* o: { thread, form, input, composer, intro, restart, invite,
+  /* o: { thread, form, input, composer, restart, invite,
           onAsk(text), onChoice(item, turn), onForm(turn, text), onReset() } */
   function create(o) {
     var thread = o.thread, composer = o.composer;
@@ -140,11 +140,10 @@
       if (text) o.onAsk(text);
     });
 
-    /* Start over: the conversation fades, the intro comes back, the field glides up to it. */
+    /* Start over: the conversation fades, its section comes back to the top, the field glides up. */
     o.restart.addEventListener('click', function () {
       function clear() {
-        glide(function () { thread.textContent = ''; window.scrollTo({ top: 0, behavior: 'instant' }); });
-        if (!reduce && o.intro.animate) o.intro.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 400, easing: 'ease' });
+        glide(function () { thread.textContent = ''; thread.parentNode.scrollIntoView({ behavior: 'instant' }); });
         o.input.value = '';
         o.input.focus({ preventScroll: true });
         o.onReset();
@@ -164,7 +163,7 @@
         document.documentElement.style.setProperty(name, node.offsetHeight + 'px');
       }).observe(node);
     }
-    track(document.querySelector('.top'), '--top-h');
+    track(document.querySelector('body > header'), '--top-h');
     track(composer, '--composer-h');
 
     return { round: round };
