@@ -257,17 +257,21 @@ def build_home(site, work, notes, views):
 </section>
 
 <section id="talk">
-  <h2>{e(site['invite'])}</h2>
-  <div class="themes" id="themes">{''.join(chips)}</div>
-  <div class="thread" id="thread" aria-live="polite"></div>
-  <div class="restart-wrap"><button type="button" class="linkbtn restart" id="restart">Start over</button></div>
-  <div class="composer" id="composer">
-    <form class="ask" id="ask" role="search" action="/work/">
-      <label for="q" class="sr">Your question</label>
-      <input id="q" name="q" type="text" autocomplete="off" placeholder="{e(site['placeholder'])}">
-      <button type="submit">Ask</button>
-    </form>
-    <p class="honesty">{e(site['honesty'])} <a href="/how-this-site-works/">How this works</a></p>
+  <header>
+    <h2>{e(site['invite'])}</h2>
+    <div class="themes" id="themes">{''.join(chips)}</div>
+  </header>
+  <div>
+    <div class="thread" id="thread" aria-live="polite"></div>
+    <div class="restart-wrap"><button type="button" class="linkbtn restart" id="restart">Start over</button></div>
+    <div class="composer" id="composer">
+      <form class="ask" id="ask" role="search" action="/work/">
+        <label for="q" class="sr">Your question</label>
+        <input id="q" name="q" type="text" autocomplete="off" placeholder="{e(site['placeholder'])}">
+        <button type="submit">Ask</button>
+      </form>
+      <p class="honesty">{e(site['honesty'])} <a href="/how-this-site-works/">How this works</a></p>
+    </div>
   </div>
 </section>
 

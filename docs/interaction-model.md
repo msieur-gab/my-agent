@@ -14,7 +14,10 @@ Everything stays extractive: every sentence the page says is written in `content
    - **The intro shows everything at once**, on a grid: a two-sentence headline at the top (the
      reader's burden, then the way out), my background and how I work bottom right, ending on an
      invitation and a link down to the conversation.
-   - **The conversation** opens on the question that leads to the topic cards.
+   - **The conversation** opens on the question that leads to the topic cards. On a wide screen
+     (900 px and more) the section is split on the intro's grid: the question and the topic cards
+     held on the left, the conversation and the question field on the right. On a narrow screen
+     it is one column. (A trial, 2 October 2026: kept in its own commit so it can be undone.)
    - **The footer** uses the same grid: a closing line top left, contact bottom right.
 2. **The question field stays within reach.** At rest the conversation's section is one screen: the
    topic cards at the top, the field at the bottom. Once the conversation is longer than the

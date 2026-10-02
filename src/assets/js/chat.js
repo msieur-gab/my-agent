@@ -143,7 +143,7 @@
     /* Start over: the conversation fades, its section comes back to the top, the field glides up. */
     o.restart.addEventListener('click', function () {
       function clear() {
-        glide(function () { thread.textContent = ''; thread.parentNode.scrollIntoView({ behavior: 'instant' }); });
+        glide(function () { thread.textContent = ''; thread.closest('section').scrollIntoView({ behavior: 'instant' }); });
         o.input.value = '';
         o.input.focus({ preventScroll: true });
         o.onReset();

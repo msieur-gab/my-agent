@@ -17,6 +17,7 @@
   --link: #24547A;
   --font: "Instrument Sans", "Helvetica Neue", Arial, sans-serif;
   --gutter: clamp(16px, 5vw, 64px);
+  --pad: clamp(16px, 5vw, 32px); /* the side padding of a reading column */
   color-scheme: light;
 }
 
@@ -65,12 +66,22 @@ h2 { margin: 0; font-weight: 500; font-size: clamp(26px, 3.6vw, 38px); line-heig
 body > footer p { color: var(--muted); font-size: 15px; line-height: 2; }
 body > footer .addr { user-select: all; color: var(--fg); }
 
-.col { max-width: 760px; margin: 0 auto; padding-inline: clamp(16px, 5vw, 32px); }
+.col { max-width: 760px; margin: 0 auto; padding-inline: var(--pad); }
 
 h1 { margin: 0; font-weight: 500; font-size: clamp(36px, 5.6vw, 60px); line-height: 1.06; letter-spacing: -0.025em; text-wrap: balance; }
 
-/* the conversation's own section: one reading column */
-#talk { max-width: 760px; margin: 0 auto; padding: clamp(28px, 6vh, 72px) clamp(16px, 5vw, 32px) 0; display: flex; flex-direction: column; gap: 22px; }
+/* The conversation's own section. One reading column on a narrow screen. On a wide one it is
+   split on the intro's grid: the question and the topic cards held on the left, the conversation
+   on the right, under the intro's text. */
+#talk { max-width: 760px; margin: 0 auto; padding: clamp(28px, 6vh, 72px) var(--pad) 0; display: flex; flex-direction: column; gap: 22px; }
+#talk > header { display: flex; flex-direction: column; gap: 22px; }
+#talk > div { display: contents; } /* one column: the field is held against the whole section */
+@media (min-width: 900px) {
+  #talk { max-width: none; padding: 0 var(--gutter); display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 0 16px; }
+  #talk > * { padding-top: clamp(28px, 6vh, 72px); }
+  #talk > header { grid-column: 1 / span 5; position: sticky; top: var(--top-h, 60px); align-self: start; }
+  #talk > div { grid-column: 7 / -1; display: flex; flex-direction: column; gap: 22px; }
+}
 
 .ask { display: flex; gap: 10px; align-items: stretch; border-bottom: 1.5px solid var(--fg); padding-bottom: 6px; margin-top: 8px; }
 .ask input { flex: 1 1 auto; min-width: 0; font: inherit; font-size: clamp(19px, 2vw, 22px); color: var(--fg); background: transparent; border: 0; padding: 10px 0; }
@@ -90,7 +101,7 @@ h1 { margin: 0; font-weight: 500; font-size: clamp(36px, 5.6vw, 60px); line-heig
    one screen, a room with the topic cards at the top and the field at the bottom. Once the
    conversation is longer than the screen the field is held at the bottom of the screen. It
    leaves with its section, so it never sits on the footer. */
-.composer { position: sticky; bottom: 0; z-index: 5; margin-top: auto; display: flex; flex-direction: column; gap: 10px; padding: 20px 0 max(14px, env(safe-area-inset-bottom)); background: linear-gradient(to bottom, transparent, var(--bg) 20px); }
+.composer { position: sticky; bottom: 0; z-index: 5; margin: auto calc(-1 * var(--pad)) 0; display: flex; flex-direction: column; gap: 10px; padding: 20px var(--pad) max(14px, env(safe-area-inset-bottom)); background: linear-gradient(to bottom, transparent, var(--bg) 20px); }
 .composer .ask { margin-top: 0; }
 
 /* the conversation */
@@ -124,7 +135,7 @@ h1 { margin: 0; font-weight: 500; font-size: clamp(36px, 5.6vw, 60px); line-heig
 
 /* several pieces to choose from: cards side by side, swiped left and right */
 .deck-wrap { display: flex; flex-direction: column; gap: 12px; }
-.deck { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; scrollbar-width: none; margin-inline: calc(-1 * clamp(16px, 5vw, 32px)); padding: 4px clamp(16px, 5vw, 32px) 10px; scroll-padding-inline: clamp(16px, 5vw, 32px); }
+.deck { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; scrollbar-width: none; margin-inline: calc(-1 * var(--pad)); padding: 4px var(--pad) 10px; scroll-padding-inline: var(--pad); }
 .deck::-webkit-scrollbar { display: none; }
 .pick { flex: 0 0 clamp(224px, 74vw, 264px); scroll-snap-align: start; display: flex; flex-direction: column; gap: 4px; min-height: 232px; padding: 18px; font: inherit; color: var(--fg); text-align: left; background: var(--surface); border: 1px solid var(--faint); border-radius: 16px; cursor: pointer; transition: border-color .2s ease; }
 .pick:hover, .pick[aria-pressed="true"] { border-color: var(--fg); }
