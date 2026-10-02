@@ -11,13 +11,15 @@ Everything stays extractive: every sentence the page says is written in `content
    one pushes the one before it up. The footer waits underneath, held at the bottom of the screen,
    and shows once the end of the conversation has lifted past it. Each section catches gently at
    its top when the scroll settles near it; inside a long conversation the scroll stays free.
-   - **The intro shows everything at once**, on a grid: the claim top left, who I am and the
-     stance bottom right, with a link down to the conversation.
+   - **The intro shows everything at once**, on a grid: a two-sentence headline at the top (the
+     reader's burden, then the way out), my background and how I work bottom right, ending on an
+     invitation and a link down to the conversation.
    - **The conversation** opens on the question that leads to the topic cards.
    - **The footer** uses the same grid: a closing line top left, contact bottom right.
-2. **The question field stays within reach.** It sits under the topic cards at rest and is held at
-   the bottom of the screen once the conversation is longer than the screen. It glides there. It
-   belongs to the conversation's section and leaves with it, so it never sits on the footer.
+2. **The question field stays within reach.** At rest the conversation's section is one screen: the
+   topic cards at the top, the field at the bottom. Once the conversation is longer than the
+   screen the field is held at the bottom of the screen. It belongs to the conversation's section
+   and leaves with it, so it never sits on the footer.
 3. **Things arrive, they don't pop.** Messages, replies and choices fade in with a slight rise.
 
 ## The conversation

@@ -8,12 +8,11 @@
   "cv": "",
   "countEndpoint": null,
 
-  "opening": "I answer the questions nobody dares to ask.",
-  "who": "I'm Gabriel Baude, a designer and creative technologist in Munich.",
+  "opening": ["Change is hard.", "Unless we spot what's in the way."],
+  "who": "Two decades with Fortune Global 500 companies and startups.",
   "stance": [
-    "Most briefs ask to ease the symptoms of an existing service.",
-    "Asking questions finds the root cause behind them.",
-    "Then the solution changes how the system works, instead of patching and polishing the wrong fix."
+    "I start by prototyping the brief I'm given, because building it reveals the questions nobody dares to ask, and those lead to solutions that hold.",
+    "Tell me what's in your way. I'll show you how I've answered something like it."
   ],
   "toTalk": "Ask yours ↓",
   "invite": "Which of these sounds like yours? Or ask in your own words.",

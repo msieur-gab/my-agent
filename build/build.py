@@ -248,10 +248,10 @@ def build_home(site, work, notes, views):
     data_json = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
     body = f"""
 <section id="intro">
-  <h1>{e(site['opening'])}</h1>
+  <h1>{''.join(f'<span>{e(line)}</span> ' for line in site['opening'])}</h1>
   <div>
     <p>{e(site['who'])}</p>
-    <p>{e(' '.join(site['stance']))}</p>
+    {''.join(f"<p>{e(line)}</p>" for line in site['stance'])}
     <a href="#talk">{e(site['toTalk'])}</a>
   </div>
 </section>
@@ -278,7 +278,7 @@ def build_home(site, work, notes, views):
 """
     ld = {"@context": "https://schema.org", "@type": "Person", "name": site["name"],
           "jobTitle": site["role"], "url": site["baseUrl"], "address": site["location"]}
-    return page(site, site["name"], body, description=site["opening"], path="/",
+    return page(site, site["name"], body, description=" ".join(site["opening"]), path="/",
                 scripts=["/assets/js/match.js", "/assets/js/redact.js", "/assets/js/respond.js", "/assets/js/chat.js",
                          "/assets/js/send.js", "/assets/js/agent.js"],
                 json_ld=ld, body_class="is-home")
@@ -351,7 +351,7 @@ def build_plain_page(site, slug):
 
 def build_llms(site, work, notes):
     base = site["baseUrl"].rstrip("/")
-    lines = [f"# {site['name']}", "", f"> {site['role']}, {site['location']}. {site['opening']}", "",
+    lines = [f"# {site['name']}", "", f"> {site['role']}, {site['location']}. {' '.join(site['opening'])}", "",
              "Every answer on this site comes from the work below. Nothing is generated.", "", "## Work", ""]
     lines += [f"- [{p['title']}]({base}{p['url']}): {p.get('question', '')} {p.get('answer', '')}" for p in work]
     lines += ["", "## Notes", ""]

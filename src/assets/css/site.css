@@ -55,7 +55,9 @@ body > footer { scroll-snap-align: end; }
 #intro, body > footer { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 48px 16px; align-content: space-between; padding: clamp(28px, 6vh, 72px) var(--gutter) clamp(28px, 6vh, 56px); }
 #intro > *, body > footer > * { grid-column: 1 / span 9; margin: 0; }
 #intro > :last-child, body > footer > :last-child { grid-column: 7 / -1; }
-#intro h1 { font-size: clamp(40px, 7vw, 104px); line-height: 1; }
+/* The headline is two sentences, one per line; each wraps on its own, evenly, when it must. */
+#intro h1 { grid-column: 1 / -1; font-size: clamp(34px, 5vw, 80px); line-height: 1.04; }
+#intro h1 span { display: block; text-wrap: balance; }
 #intro div { display: flex; flex-direction: column; align-items: flex-start; gap: 16px; font-size: clamp(19px, 1.7vw, 24px); line-height: 1.4; }
 #intro p { margin: 0; }
 #intro a { margin-top: 8px; padding: 11px 20px; font-size: 16px; font-weight: 500; color: var(--bg); background: var(--fg); text-decoration: none; }
@@ -85,10 +87,11 @@ h1 { margin: 0; font-weight: 500; font-size: clamp(36px, 5.6vw, 60px); line-heig
 .chip:hover { border-color: var(--fg); }
 .chip[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
 
-/* The question field: in its place under the topic cards at rest, held at the bottom of the
-   screen as soon as the conversation is longer than the screen. It belongs to the conversation's
-   section and leaves with it, so it never sits on the footer. */
-.composer { position: sticky; bottom: 0; z-index: 5; display: flex; flex-direction: column; gap: 10px; padding: 20px 0 max(14px, env(safe-area-inset-bottom)); background: linear-gradient(to bottom, transparent, var(--bg) 20px); }
+/* The question field sits at the bottom of the conversation's section: at rest the section is
+   one screen, a room with the topic cards at the top and the field at the bottom. Once the
+   conversation is longer than the screen the field is held at the bottom of the screen. It
+   leaves with its section, so it never sits on the footer. */
+.composer { position: sticky; bottom: 0; z-index: 5; margin-top: auto; display: flex; flex-direction: column; gap: 10px; padding: 20px 0 max(14px, env(safe-area-inset-bottom)); background: linear-gradient(to bottom, transparent, var(--bg) 20px); }
 .composer .ask { margin-top: 0; }
 
 /* the conversation */
