@@ -27,8 +27,8 @@ Everything stays extractive: every sentence the page says is written in `content
 
 ## Project and note pages (2 October 2026)
 
-After web-thecube's split reader. On a wide screen the whole text scrolls on the right (five columns
-of twelve) and a pane on the left, held from the top of the page, shows the media that belongs to
+After web-thecube's split reader. On a wide screen the whole text scrolls on the right (half the
+width) and a pane on the left, held from the top of the page, shows the media that belongs to
 what is being read: images, screen recordings, bar charts, flow diagrams and quotes that carry a
 name. Every one shows in the same place. Each has a mark in the text, its caption, where it
 belongs; when the mark nears the top of the screen the pane changes to it. On a narrow screen, and

@@ -129,7 +129,7 @@ const siteData = pageData.site;
 const base = siteData.basePath || '';   // '' on a root domain, '/my-agent' on GitHub Pages
 const brain = Respond.create(pageData);
 const rounds = [
-  ['a topic with one project presents it', () => brain.theme('gdpr'), r => r.template === 'project' && /^DataDraw is about/.test(r.says[0]) && r.link.href === base + '/work/datadraw/'],
+  ['a topic answers first, then shows where it comes from', () => brain.theme('gdpr'), r => r.template === 'choice' && r.says.length === 3 && r.says[2] === siteData.voice.fromWork && r.cards.length === 1 && r.cards[0].pick === 'datadraw'],
   ['"show me" then opens it', () => brain.ask('show me'), r => r.template === 'talk' && r.go === base + '/work/datadraw/'],
   ['a misspelt project name still finds it', () => brain.ask('and what about titptap'), r => r.template === 'project' && r.link.href === base + '/work/tiptap/'],
   ['picking a card presents the project', () => brain.pick('pebbble'), r => r.template === 'project' && /^Pebbble is about/.test(r.says[0])],
@@ -138,7 +138,8 @@ const rounds = [
   ['"show me all your work" lists every project', () => brain.ask('show me all your work'), r => r.template === 'choice' && r.cards.length === data.pieces.filter(p => p.type === 'work').length],
   ['hello is answered as talk', () => brain.ask('hello'), r => r.template === 'talk' && r.next.items.length === siteData.themes.length],
   ['no match invites the question', () => brain.ask('Do you do logo design?'), r => r.template === 'none' && r.form.text === 'Do you do logo design?'],
-  ['after "start over" a project can be presented again', () => { brain.reset(); return brain.theme('ideas'); }, r => r.template === 'project'],
+  ['after "start over" a project can be presented again', () => { brain.reset(); return brain.pick('pebbble'); }, r => r.template === 'project'],
+  ['a topic with several projects shows a card for each', () => brain.theme('distance'), r => r.template === 'choice' && r.says[0] === siteData.themes.filter(t => t.id === 'distance')[0].says[0] && r.cards.length > 1],
 ];
 let roundPass = 0;
 for (const [name, run, ok] of rounds) {

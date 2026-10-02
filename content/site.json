@@ -15,18 +15,19 @@
     "Tell me what's in your way. I'll show you how I've answered something like it."
   ],
   "toTalk": "Ask yours ↓",
+  "talkLine": "I answer the questions nobody dares to ask.",
   "invite": "Which of these sounds like yours? Or ask in your own words.",
   "closing": "Didn't find your question here? Send it to me. I answer every message myself.",
   "placeholder": "e.g. Can we use AI and still pass GDPR?",
   "honesty": "Answers come only from my own work and views. If I haven't done something, I'll say so. No cookies.",
 
   "themes": [
-    { "id": "ideas",    "label": "Ideas that never get tested", "pieces": ["senz"] },
-    { "id": "trust",    "label": "AI you can actually trust",   "pieces": ["brainboard", "musicast", "babiban", "senz"] },
-    { "id": "gdpr",     "label": "GDPR and data protection",    "pieces": ["datadraw"] },
-    { "id": "privacy",  "label": "Privacy by design",           "pieces": ["symbios", "pebbble", "brainboard"] },
-    { "id": "distance", "label": "Presence across distance",    "pieces": ["pebbble", "tiptap", "babiban"] },
-    { "id": "screens",  "label": "Children and screens",        "pieces": ["pilipala", "vrooom"] }
+    { "id": "ideas",    "label": "Ideas that never get tested", "says": ["An idea is rarely the problem. The cost of testing it is.", "When one test takes four disciplines and nine months, people stop proposing. Make the test cheaper than the meeting about it, and the ideas come back."], "pieces": ["senz"] },
+    { "id": "trust",    "label": "AI you can actually trust", "says": ["Trust comes from a system that can say \"I don't know\" and show where its answer comes from.", "I would rather build something you can always read than something that is always right."],   "pieces": ["brainboard", "musicast", "babiban", "senz"] },
+    { "id": "gdpr",     "label": "GDPR and data protection", "says": ["Regulation is a design brief, not a blocker.", "Most of the risk comes from nobody outside legal being able to see where the data goes. Make it visible to everyone, and compliance becomes a shared decision."],    "pieces": ["datadraw"] },
+    { "id": "privacy",  "label": "Privacy by design", "says": ["Privacy holds when it is built into the architecture, not promised in a policy.", "If a system cannot hold your data, it cannot leak it, sell it or lose it."],           "pieces": ["symbios", "pebbble", "brainboard"] },
+    { "id": "distance", "label": "Presence across distance", "says": ["Distance erodes presence slowly, and a message is rarely enough: a voice carries the person.", "I look for the smallest object or gesture that lets someone be there, without a screen in between."],    "pieces": ["pebbble", "tiptap", "babiban"] },
+    { "id": "screens",  "label": "Children and screens", "says": ["The question is not how much screen time, but what the screen is for.", "I design the digital part so that it sends children back to the world: outside, to paper, to each other."],        "pieces": ["pilipala", "vrooom"] }
   ],
 
   "partialIntro": "This is the closest I have.",
@@ -56,6 +57,7 @@
     "heard": "Why this one: you mentioned",
     "also": "Also on this",
     "askBack": "I have a few pieces on that. Which is closest to your situation?",
+    "fromWork": "Here is where I have worked on it, if you want to see how.",
     "open": "Show me →",
     "another": "Another angle on that.",
     "seen": "{title} is still my best answer to that.",

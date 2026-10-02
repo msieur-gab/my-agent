@@ -26,8 +26,8 @@
     pieces.forEach(function (p) { bySlug[p.slug] = p; });
 
     /* Memory, for this visit only: what was shown, what else was close, which project and which topic the talk is on. */
-    var seen, pool, focus, topic, viewed, lastNone = -1;
-    function reset() { seen = {}; pool = []; focus = null; topic = null; viewed = false; }
+    var seen, told, pool, focus, topic, viewed, lastNone = -1;
+    function reset() { seen = {}; told = {}; pool = []; focus = null; topic = null; viewed = false; }
     reset();
 
     function unseen(list) { return list.filter(function (p) { return p && !seen[p.slug]; }); }
@@ -64,9 +64,9 @@
       };
     }
 
-    /* Several projects fit: one line, then a card each. */
-    function choice(line, list, link) {
-      return { template: 'choice', says: [line], cards: list.map(card), link: link || null };
+    /* Several projects fit: what I say first (one line or several), then a card each. */
+    function choice(lines, list, link) {
+      return { template: 'choice', says: [].concat(lines), cards: list.map(card), link: link || null };
     }
 
     /* A written line for things said to a person: hello, who are you, how does this work. */
@@ -238,6 +238,12 @@
       topic = id;
       var fresh = unseen(list);
       if (!list.length) return none(t ? t.label : '');
+      /* A topic is a question too: my own short answer first, then the projects it comes from. */
+      if (t.says && !told[id]) {
+        told[id] = true;
+        if (list.length === 1) focus = list[0].slug;      /* one project: "show me" means that one */
+        return choice(t.says.concat(voice.fromWork), fresh.length ? fresh : list);
+      }
       if (list.length === 1) return project(list[0]);
       if (fresh.length === 1) return project(fresh[0], null, null, list);
       if (!fresh.length) return nothingLeft();

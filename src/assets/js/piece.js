@@ -1,17 +1,20 @@
 /* The split reader of a project or a note, after web-thecube's split-sync.js.
-   On a wide screen the text scrolls beside a pane that holds the figures (site.css). As each
-   figure's place in the text crosses the reading line, the pane shows that figure.
+   On a wide screen the text scrolls beside a pane that holds the figures (site.css).
+   A figure belongs to a stretch of the text: from the paragraph just before its place, which
+   introduces it, to the next figure's stretch. The pane shows the figure whose stretch holds
+   the middle of the screen. That depends only on where the page is, not on the direction of
+   the scroll, so reading down and reading back up show the same figure beside the same text.
    Without JavaScript the pane keeps the first figure; on a narrow screen figures sit in the text. */
 (function () {
   var pane = [].slice.call(document.querySelectorAll('#piece > aside figure'));
   var marks = [].slice.call(document.querySelectorAll('#piece > div figure'));
-  var bar = document.querySelector('body > header');
   if (!pane.length) return;
 
   function update() {
-    var line = bar.offsetHeight + window.innerHeight * 0.22, on = marks[0];
-    marks.forEach(function (m) { if (m.getBoundingClientRect().top < line) on = m; });
-    if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) on = marks[marks.length - 1];
+    var middle = window.innerHeight / 2, on = marks[0];
+    marks.forEach(function (m) {
+      if ((m.previousElementSibling || m).getBoundingClientRect().top < middle) on = m;
+    });
     pane.forEach(function (f) {
       var show = f.dataset.media === on.dataset.media, video = f.querySelector('video');
       f.toggleAttribute('data-on', show);

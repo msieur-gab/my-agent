@@ -305,10 +305,11 @@ def build_home(site, work, notes, views):
 
 <section id="talk">
   <header>
-    <h2>{e(site['invite'])}</h2>
+    <h2>{e(site['talkLine'])}</h2>
     <div class="themes" id="themes">{''.join(chips)}</div>
   </header>
   <div>
+    <h3>{e(site['invite'])}</h3>
     <div class="thread" id="thread" aria-live="polite"></div>
     <div class="restart-wrap"><button type="button" class="linkbtn restart" id="restart">Start over</button></div>
     <div class="composer" id="composer">

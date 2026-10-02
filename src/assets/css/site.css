@@ -63,7 +63,7 @@ main > section { min-height: calc(100svh - var(--top-h, 60px)); scroll-snap-alig
 #intro h1 span { display: block; text-wrap: balance; }
 #intro div { display: flex; flex-direction: column; align-items: flex-start; gap: 16px; font-size: clamp(19px, 1.7vw, 24px); line-height: 1.4; }
 #intro p { margin: 0; }
-#intro a { margin-top: 8px; padding: 11px 20px; font-size: 16px; font-weight: 500; background: var(--mark); }
+#intro a { margin-top: 8px; padding: 11px 20px; font-size: 16px; font-weight: 500; background: var(--mark); border-radius: 999px; }
 #intro a:hover { color: var(--bg); background: var(--fg); }
 h2 { margin: 0; font-weight: 500; font-size: clamp(26px, 3.6vw, 38px); line-height: 1.15; letter-spacing: -0.02em; text-wrap: balance; }
 body > footer p { color: var(--muted); font-size: 15px; line-height: 2; }
@@ -73,16 +73,18 @@ body > footer .addr { user-select: all; color: var(--fg); }
 
 h1 { margin: 0; font-weight: 500; font-size: clamp(36px, 5.6vw, 60px); line-height: 1.06; letter-spacing: -0.025em; text-wrap: balance; }
 
-/* The conversation's own section. One reading column on a narrow screen. On a wide one it is
-   split on the intro's grid: the question and the topic cards held on the left, the conversation
-   on the right, under the intro's text. */
+/* The conversation's own section. One reading column on a narrow screen. On a wide one it keeps
+   the rhythm of the intro and the footer: on the left, held, a large line and the topic tags under
+   it; on the right, under the intro's text, the invitation, the conversation and the question field. */
 #talk { max-width: 760px; margin: 0 auto; padding: clamp(28px, 6vh, 72px) var(--pad) 0; display: flex; flex-direction: column; gap: 22px; }
-#talk > header { display: flex; flex-direction: column; gap: 22px; }
+#talk > header { display: flex; flex-direction: column; gap: clamp(22px, 4vh, 40px); }
+#talk h2 { font-size: clamp(30px, 5vw, 80px); line-height: 1.04; }
+#talk h3 { margin: 0; font-weight: 500; font-size: clamp(20px, 1.9vw, 26px); line-height: 1.25; letter-spacing: -0.01em; text-wrap: balance; }
 #talk > div { display: contents; } /* one column: the field is held against the whole section */
 @media (min-width: 900px) {
   #talk { max-width: none; padding: 0 var(--gutter); display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 0 16px; }
   #talk > * { padding-top: clamp(28px, 6vh, 72px); }
-  #talk > header { grid-column: 1 / span 5; position: sticky; top: var(--top-h, 60px); align-self: start; }
+  #talk > header { grid-column: 1 / span 6; position: sticky; top: var(--top-h, 60px); align-self: start; }
   #talk > div { grid-column: 7 / -1; display: flex; flex-direction: column; gap: 22px; }
 }
 
@@ -90,14 +92,15 @@ h1 { margin: 0; font-weight: 500; font-size: clamp(36px, 5.6vw, 60px); line-heig
 .ask input { flex: 1 1 auto; min-width: 0; font: inherit; font-size: clamp(19px, 2vw, 22px); color: var(--fg); background: transparent; border: 0; padding: 10px 0; }
 .ask input::placeholder { color: #9A9C9E; }
 .ask input:focus-visible { outline: none; }
-.ask button, .btn { font: inherit; font-size: 16px; font-weight: 500; color: var(--fg); background: var(--mark); border: 0; padding: 0 20px; min-height: 46px; cursor: pointer; }
+.ask button, .btn { font: inherit; font-size: 16px; font-weight: 500; color: var(--fg); background: var(--mark); border: 0; padding: 0 20px; min-height: 46px; cursor: pointer; border-radius: 999px; }
 .ask button:hover, .btn:hover { color: var(--bg); background: var(--fg); }
 .honesty { margin: 0; font-size: 14px; color: var(--muted); }
 .honesty a { color: var(--muted); white-space: nowrap; }
 
 .themes { display: flex; flex-wrap: wrap; gap: 8px; }
-.chip { display: inline-flex; align-items: center; font: inherit; font-size: 15px; line-height: 1.3; color: var(--fg); background: transparent; border: 1px solid var(--faint); padding: 9px 14px; min-height: 44px; border-radius: 999px; cursor: pointer; text-decoration: none; text-align: left; }
-.chip:hover { border-color: var(--fg); }
+/* A tag: a pill is a choice to tap. */
+.chip { display: inline-flex; align-items: center; font: inherit; font-size: clamp(16px, 1.3vw, 19px); line-height: 1.3; color: var(--fg); background: transparent; border: 1px solid var(--fg); border-radius: 999px; padding: 9px 18px; min-height: 46px; cursor: pointer; text-decoration: none; text-align: left; }
+.chip:hover { background: var(--mark); }
 .chip[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
 
 /* The question field sits at the bottom of the conversation's section: at rest the section is
@@ -116,7 +119,7 @@ h1 { margin: 0; font-weight: 500; font-size: clamp(36px, 5.6vw, 60px); line-heig
 /* Whatever joins the conversation arrives, it doesn't pop. */
 .turn > * { animation: arrive .5s cubic-bezier(.2, .8, .2, 1) both; }
 @keyframes arrive { from { opacity: 0; transform: translateY(10px); } }
-.you { margin: 0; align-self: flex-end; max-width: 85%; background: var(--soft); padding: 12px 16px; border-radius: 16px 16px 4px 16px; font-size: 17px; }
+.you { margin: 0; align-self: flex-end; max-width: 85%; background: var(--soft); padding: 12px 16px; font-size: 17px; border-radius: 16px 16px 4px 16px; }
 .you .label { display: block; font-size: 12px; color: var(--muted); letter-spacing: 0.04em; margin-bottom: 2px; }
 .say { margin: 0; font-size: 19px; }
 .say .w { opacity: 0; transition: opacity .25s ease; }
@@ -140,7 +143,7 @@ h1 { margin: 0; font-weight: 500; font-size: clamp(36px, 5.6vw, 60px); line-heig
 .deck-wrap { display: flex; flex-direction: column; gap: 12px; }
 .deck { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; scrollbar-width: none; margin-inline: calc(-1 * var(--pad)); padding: 4px var(--pad) 10px; scroll-padding-inline: var(--pad); }
 .deck::-webkit-scrollbar { display: none; }
-.pick { flex: 0 0 clamp(224px, 74vw, 264px); scroll-snap-align: start; display: flex; flex-direction: column; gap: 4px; min-height: 232px; padding: 18px; font: inherit; color: var(--fg); text-align: left; background: var(--surface); border: 1px solid var(--faint); border-radius: 16px; cursor: pointer; transition: border-color .2s ease; }
+.pick { flex: 0 0 clamp(224px, 74vw, 264px); scroll-snap-align: start; display: flex; flex-direction: column; gap: 4px; min-height: 232px; padding: 18px; font: inherit; color: var(--fg); text-align: left; background: var(--surface); border: 1px solid var(--faint); cursor: pointer; transition: border-color .2s ease; border-radius: 16px; }
 .pick:hover, .pick[aria-pressed="true"] { border-color: var(--fg); }
 .pick-title { font-weight: 500; font-size: 17px; }
 .pick-where { font-size: 13px; color: var(--muted); }
@@ -149,7 +152,7 @@ h1 { margin: 0; font-weight: 500; font-size: clamp(36px, 5.6vw, 60px); line-heig
 .pick[aria-pressed="true"] .pick-go { visibility: hidden; }
 .deck-nav { display: flex; gap: 6px; justify-content: flex-end; }
 .deck-nav[hidden] { display: none; }
-.deck-btn { width: 44px; height: 44px; font: inherit; font-size: 18px; color: var(--fg); background: transparent; border: 1px solid var(--faint); border-radius: 50%; cursor: pointer; transition: border-color .2s ease, opacity .2s ease; }
+.deck-btn { width: 44px; height: 44px; font: inherit; font-size: 18px; color: var(--fg); background: transparent; border: 1px solid var(--faint); cursor: pointer; transition: border-color .2s ease, opacity .2s ease; border-radius: 50%; }
 .deck-btn:hover { border-color: var(--fg); }
 .deck-btn:disabled { opacity: .3; cursor: default; border-color: var(--faint); }
 @media (pointer: coarse) { .deck-nav { display: none; } } /* fingers swipe */
@@ -157,10 +160,10 @@ h1 { margin: 0; font-weight: 500; font-size: clamp(36px, 5.6vw, 60px); line-heig
 /* send form */
 .send { display: flex; flex-direction: column; gap: 16px; padding: 22px; background: var(--surface); border: 1px solid var(--faint); border-radius: 16px; }
 .send label { display: block; font-size: 13px; color: var(--muted); letter-spacing: 0.04em; margin-bottom: 4px; }
-.send textarea, .send input[type="email"] { width: 100%; font: inherit; font-size: 18px; color: var(--fg); background: transparent; border: 0; border-bottom: 1px solid var(--muted); border-radius: 0; padding: 8px 0; }
+.send textarea, .send input[type="email"] { width: 100%; font: inherit; font-size: 18px; color: var(--fg); background: transparent; border: 0; border-bottom: 1px solid var(--muted); padding: 8px 0; border-radius: 0; }
 .send textarea { resize: vertical; min-height: 72px; }
 .preview { margin: 0; padding: 14px 16px; background: var(--soft); font-size: 16px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
-.redacted { font: inherit; font-size: 15px; color: var(--fg); background: var(--mark); border: 1px dashed var(--fg); border-radius: 4px; padding: 0 6px; cursor: pointer; }
+.redacted { font: inherit; font-size: 15px; color: var(--fg); background: var(--mark); border: 1px dashed var(--fg); padding: 0 6px; cursor: pointer; border-radius: 4px; }
 .redacted[aria-pressed="true"] { border-style: solid; color: var(--fg); }
 .hint { margin: 0; font-size: 14px; color: var(--muted); }
 .status { margin: 0; font-size: 16px; }
@@ -211,8 +214,8 @@ svg.chart { display: block; width: 100%; height: auto; font-family: var(--font);
 .c-s3 { fill: color-mix(in oklab, var(--mark) 78%, #000); } .c-s4 { fill: color-mix(in oklab, var(--mark) 60%, #000); } .c-s5 { fill: color-mix(in oklab, var(--mark) 45%, #000); }
 @media (min-width: 900px) {
   #piece:has(> aside) { max-width: none; padding: 24px var(--gutter) 40px; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 16px; align-items: start; }
-  #piece > aside { display: block; grid-column: 1 / span 7; position: sticky; top: calc(var(--top-h, 60px) + 24px); height: calc(100svh - var(--top-h, 60px) - 48px); }
-  #piece > aside + div { grid-column: 8 / -1; padding-bottom: 16vh; }
+  #piece > aside { display: block; grid-column: 1 / span 6; position: sticky; top: calc(var(--top-h, 60px) + 24px); height: calc(100svh - var(--top-h, 60px) - 48px); }
+  #piece > aside + div { grid-column: 7 / -1; padding-bottom: 16vh; }
   #piece > aside figure { position: absolute; inset: 6px 32px 6px 0; margin: 0; display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 12px; justify-items: center; opacity: 0; pointer-events: none; transition: opacity .45s ease; }
   #piece > aside figure[data-on], #piece > aside:not(:has([data-on])) figure:first-child { opacity: 1; pointer-events: auto; }
   #piece > aside figure > :first-child { max-width: 100%; max-height: 100%; min-height: 0; align-self: center; object-fit: contain; }
