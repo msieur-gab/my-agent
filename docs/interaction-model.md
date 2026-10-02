@@ -25,6 +25,17 @@ Everything stays extractive: every sentence the page says is written in `content
    and leaves with it, so it never sits on the footer.
 3. **Things arrive, they don't pop.** Messages, replies and choices fade in with a slight rise.
 
+## Project and note pages (2 October 2026)
+
+After web-thecube's split reader. On a wide screen the whole text scrolls on the right (five columns
+of twelve) and a pane on the left, held from the top of the page, shows the media that belongs to
+what is being read: images, screen recordings, bar charts, flow diagrams and quotes that carry a
+name. Every one shows in the same place. Each has a mark in the text, its caption, where it
+belongs; when the mark nears the top of the screen the pane changes to it. On a narrow screen, and
+without JavaScript, the media sit in the text. A page without media is one centred column.
+
+The accent is one yellow, used as a highlighter: behind dark text, never as the text.
+
 ## The conversation
 
 4. **It shows it listened.** "Why this one: you mentioned …", using only words found in the piece's

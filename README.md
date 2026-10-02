@@ -35,6 +35,10 @@ src/assets/js/chat.js    shows a reply, always in the same order; looks after th
 src/assets/js/send.js    the form that reaches me
 src/assets/js/redact.js  removes names and contact details before anything is sent
 src/assets/js/agent.js   wires the above together
+src/assets/js/piece.js   project and note pages: shows the figure that belongs to the text being read
+src/assets/js/flow.js    draws the flow diagrams (from web-thecube, unchanged)
+build/charts.py          bar charts, drawn as static SVG when the site is built
+content/media/<piece>/   images and screen recordings of a piece
 build/build.py           content → static, crawlable pages + answers.json, sitemap, robots.txt, llms.txt
 docs/                    site foundation, interaction model and the questions log
 .github/workflows/       build and deploy to GitHub Pages

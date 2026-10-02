@@ -13,6 +13,8 @@ import re
 import shutil
 from pathlib import Path
 
+import charts
+
 ROOT = Path(__file__).resolve().parent.parent
 CONTENT = ROOT / "content"
 SRC = ROOT / "src"
@@ -93,19 +95,48 @@ def markdown(md):
             out.append("<ul>" + "".join(f"<li>{inline(i)}</li>" for i in items) + "</ul>")
             items.clear()
         if quote:
-            out.append(f"<blockquote><p>{inline(' '.join(quote))}</p></blockquote>")
+            # A quote that ends on "— someone" is a citation: a figure, with the name as its caption.
+            # One without a name is part of the text and stays in it.
+            named = quote[-1][:1] in "—–" and quote.pop()[1:].strip()
+            block = f"<blockquote><p>{inline(' '.join(quote))}</p></blockquote>"
+            out.append(f"<figure>{block}<figcaption>— {inline(named)}</figcaption></figure>" if named else block)
             quote.clear()
 
+    fence = None                                   # inside a ``` block: [its name, its lines]
     for line in md.splitlines():
         s = line.rstrip()
+        if s.startswith("```"):
+            if fence is None:
+                flush()
+                fence = [s[3:].strip(), []]
+            else:
+                name, text = fence[0], "\n".join(fence[1])
+                if name == "chart-bar":
+                    out.append(charts.figure(text))
+                elif name.startswith("flow"):
+                    out.append(flow(name, text))
+                else:
+                    out.append(f"<pre><code>{html.escape(text)}</code></pre>")
+                fence = None
+            continue
+        if fence is not None:
+            fence[1].append(line)
+            continue
         if not s.strip():
             flush()
             continue
         h = re.match(r"^(#{2,4})\s+(.*)$", s)
-        if h:
+        fig = re.match(r"^!\[(.*)\]\((\S+)\)$", s)
+        if s.strip() == "---":
+            flush()
+            out.append("<hr>")
+        elif h:
             flush()
             n = len(h.group(1))
             out.append(f"<h{n}>{inline(h.group(2))}</h{n}>")
+        elif fig:
+            flush()
+            out.append(figure(*fig.groups()))
         elif re.match(r"^\s*[-*]\s+", s):
             if para:
                 flush()
@@ -117,7 +148,23 @@ def markdown(md):
                 flush()
             para.append(s.strip())
     flush()
-    return "\n".join(out)
+    return "\n".join(out).replace(" : ", "<br>")           # "**Term**" then ": its definition"
+
+
+def flow(name, text):
+    """A flow diagram: flow.js draws it in the browser over its own source, which stays in the page."""
+    direction = name.split()[1].upper() if len(name.split()) > 1 and name.split()[1].upper() in ("LR", "TB") else "TB"
+    title = next((l.strip()[2:].strip() for l in text.splitlines() if l.strip().startswith("# ")), "")
+    return (f'<figure><div class="flow-mount" data-flow-dir="{direction}"><pre class="flow-src"><code>{html.escape(text)}</code></pre></div>'
+            f'<figcaption>{html.escape(title)}</figcaption></figure>')
+
+
+def figure(caption, src):
+    """An image or a screen recording with its caption. Recordings play silently, in a loop."""
+    src, alt = html.escape(src), html.escape(caption)
+    media = (f'<video src="{src}" aria-label="{alt}" muted loop playsinline controls preload="metadata"></video>'
+             if src.endswith((".webm", ".mp4")) else f'<img src="{src}" alt="{alt}" loading="lazy">')
+    return f"<figure>{media}<figcaption>{alt}</figcaption></figure>"
 
 
 # ---------------------------------------------------------------- content
@@ -298,27 +345,40 @@ def public_piece(p):
 
 
 def build_piece(site, p):
+    """A project or a note. After web-thecube's split reader: each figure is written twice from one
+    markup, once in the text (where it belongs) and once in the pane beside it, paired by number."""
     draft = '<p class="draft">Draft text, to be rewritten.</p>' if p.get("draft") else ""
     label = "The brief" if p["type"] == "work" else "The common view"
+    pane = []
+
+    def number(m):
+        pane.append(f'<figure data-media="{len(pane) + 1}">{m.group(1)}</figure>')
+        return pane[-1]
+    story = re.sub(r"<figure>(.*?)</figure>", number, p["html"], flags=re.S)
+    aside = f"<aside>{''.join(pane)}</aside>" if pane else ""
     body = f"""
-<article class="col piece">
-  {draft}
-  <p class="where">{meta_line(p)}</p>
-  <h1>{e(p['title'])}</h1>
-  <div class="trio">
-    <div class="step"><span class="label">{label}</span><p class="brief">“{e(p.get('brief'))}”</p></div>
-    <div class="step"><span class="label">The question nobody asked</span><p class="q">{e(p.get('question'))}</p></div>
-    <div class="step"><span class="label">The answer</span><p class="a">{e(p.get('answer'))}</p></div>
+<article id="piece">
+  {aside}
+  <div>
+    {draft}
+    <p class="where">{meta_line(p)}</p>
+    <h1>{e(p['title'])}</h1>
+    <div class="trio">
+      <div class="step"><span class="label">{label}</span><p class="brief">“{e(p.get('brief'))}”</p></div>
+      <div class="step"><span class="label">The question nobody asked</span><p class="q">{e(p.get('question'))}</p></div>
+      <div class="step"><span class="label">The answer</span><p class="a">{e(p.get('answer'))}</p></div>
+    </div>
+    <div class="story">{story}</div>
+    <p class="after"><a href="/?about={e(p['slug'])}#q">Ask me about this →</a></p>
   </div>
-  <div class="story">{p['html']}</div>
-  <p class="after"><a href="/?about={e(p['slug'])}#q">Ask me about this →</a></p>
 </article>
 """
     kind = "CreativeWork" if p["type"] == "work" else "Article"
     ld = {"@context": "https://schema.org", "@type": kind, "name": p["title"],
           "description": p.get("answer", ""), "author": {"@type": "Person", "name": site["name"]},
           "url": site["baseUrl"].rstrip("/") + p["url"], "keywords": ", ".join(p.get("keywords", []))}
-    return page(site, p["title"], body, description=p.get("question", ""), path=p["url"], json_ld=ld)
+    return page(site, p["title"], body, description=p.get("question", ""), path=p["url"], json_ld=ld,
+                scripts=(["/assets/js/piece.js"] if pane else []) + (["/assets/js/flow.js"] if "flow-mount" in story else []))
 
 
 def build_index(site, title, intro, pieces, path, themes, with_filters):
@@ -389,6 +449,8 @@ def main():
     if OUT.exists():
         shutil.rmtree(OUT)
     shutil.copytree(SRC / "assets", OUT / "assets")
+    if (CONTENT / "media").is_dir():
+        shutil.copytree(CONTENT / "media", OUT / "media")
 
     write("index.html", build_home(site, work, notes, views))
     for p in work + notes:
