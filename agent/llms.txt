@@ -1,0 +1,26 @@
+# Gabriel Baude
+
+> Designer and creative technologist, Munich, working across Europe. Change is hard. Unless we spot what's in the way.
+
+Every answer on this site comes from the work below. Nothing is generated.
+
+## Work
+
+- [Babiban](https://msieur-gab.github.io/my-agent/agent/work/babiban/): What if a voice companion only ever said words a real parent wrote? A small voice device that answers a child in her father's own voice, with phrases he actually wrote, chosen by what she means. Not a chatbot, not a generated word.
+- [Brainboard](https://msieur-gab.github.io/my-agent/agent/work/brainboard/): What if a knowledge tool said "I don't know" instead of inventing an answer? A thinking canvas with a small local librarian that only quotes what you actually wrote, with its source, and stays silent when it has nothing. Your notes stay on your device.
+- [DataDraw](https://msieur-gab.github.io/my-agent/agent/work/datadraw/): Why can only legal see where the risk is? Draw how data moves through the company by hand. A tiny model running in the browser turns the drawing into a working pipeline that anonymises, encrypts and documents the data, without it ever leaving the device.
+- [Musicast](https://msieur-gab.github.io/my-agent/agent/work/musicast/): What if an algorithm were something you could read, rather than something that's always right? A house music system that casts straight to my speakers without any account, and sorts songs by mood with fourteen readable formulas instead of a black-box neural network. Each song's profile is written into the file itself.
+- [Pebbble](https://msieur-gab.github.io/my-agent/agent/work/pebbble/): What if a parent's voice lived in something the child can hold, that nobody can block? Hand-formed stones with a sealed NFC tag carrying encrypted voice messages. No screen, no account. Holding the stone is the key, and a message can wait years to open, like one for an 18th birthday.
+- [Pilipala](https://msieur-gab.github.io/my-agent/agent/work/pilipala/): What if a child could record their day without a screen, and without being measured? A wooden peg board that grows with the child. Eight pegs a day for what they noticed (sky, energy, play…), read by a phone camera in seconds and played back as an ambient soundscape of their world. No accounts, no cloud.
+- [Senz](https://msieur-gab.github.io/my-agent/agent/work/senz/): What if testing an idea cost less than the meeting about it? Experts sketch an interface on paper and get a deployable MVP built on the company's own design system. 96% less time from idea to MVP, six months before Microsoft's Sketch2Code and seven years before Figma Make.
+- [Symbios](https://msieur-gab.github.io/my-agent/agent/work/symbios/): What if your computer had no body, and your identity never touched a server? A pocket-sized computer that becomes a whole desktop on any screen it's plugged into, with your music, reading, notes and work, fully offline. Your identity is born on your phone and recovered with 16 words, with no company in the loop.
+- [TipTap](https://msieur-gab.github.io/my-agent/agent/work/tiptap/): How do you write to your child in a language they no longer share with you, without losing the feeling? Write in the language of your emotions, and TipTap gives you a professionally human-translated message in your child's language, ready to paste into whatever channel reaches them. Offline, nothing leaves the device.
+- [Vrooom](https://msieur-gab.github.io/my-agent/agent/work/vrooom/): What if the digital part only existed to send parents and kids outside together? A hand-planed wooden car with an NFC tag. Tap it at a playground or a walk to check in and earn a badge, then print it, colour it and glue it into a handmade travel passport. The phone witnesses the adventure, it doesn't run it.
+
+## Notes
+
+- [Empower people, enforce their privacy, restore their agency](https://msieur-gab.github.io/my-agent/agent/notes/empower-privacy-agency/): Three words that are really one commitment. Empower people with real capabilities, not rented conveniences. Enforce privacy by architecture, not policy. And restore agency, giving back the ownership the current web took.
+
+## About this site
+
+- [How this site works](https://msieur-gab.github.io/my-agent/agent/how-this-site-works/)
