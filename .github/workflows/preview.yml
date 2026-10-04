@@ -1,0 +1,48 @@
+name: Publish the agent preview
+
+# Builds this branch and puts it in the agent/ folder of the gh-pages branch, next to the live site,
+# so the conversation can be tried at https://msieur-gab.github.io/my-agent/agent/ without touching it.
+# A push to main rebuilds gh-pages from scratch and removes the preview: push this branch again to bring it back.
+
+on:
+  push:
+    branches: [feat/agent]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build the site
+        env:
+          BASE_PATH: /my-agent/agent
+          BASE_URL: https://msieur-gab.github.io/my-agent/agent
+        run: python3 build/build.py
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check matching, meaning and redaction
+        run: node tests/check.js
+      - name: Put the build in gh-pages/agent
+        run: |
+          git fetch origin gh-pages --depth 1
+          git worktree add ../pages origin/gh-pages
+          rm -rf ../pages/agent
+          cp -r public ../pages/agent
+          cd ../pages
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add -A agent
+          git commit -q -m "Agent preview built from ${GITHUB_SHA::7}" || exit 0
+          git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git" HEAD:gh-pages
