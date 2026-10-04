@@ -12,7 +12,8 @@
        link:  { text, href },
        next:  { label, items },   suggestions, in the visitor's words
        invite: true | line,   "Want to talk about your version of this?", or the reply's own words
-       go:    href }          leave for this page once the line is said                        */
+       go:    href,           leave for this page once the line is said
+       trace: { how, verdict, targets, score }   how the reply was decided                     */
 (function (root) {
   var node = typeof module !== 'undefined' && module.exports;
   var Match = node ? require('./match.js') : root.Match;
@@ -64,6 +65,25 @@
       };
     }
 
+    /* About me or what I do (content/intents/): said as it is written, with the form when it asks for one. */
+    function intent(p) {
+      var then = (p.next || []).map(function (s) { return bySlug[s]; }).filter(Boolean);
+      return {
+        template: 'talk',
+        says: p.says || [],
+        form: p.form ? { text: '' } : null,
+        next: then.length ? { label: voice.then, items: then.map(function (o) { return { text: (o.answers || [])[0] || o.title, pick: o.slug, said: true }; }) } : null,
+        invite: p.form ? null : true
+      };
+    }
+
+    /* One answer, whatever kind it is. `lead` is said first when the match is only the closest I have. */
+    function answer(p, lead, why) {
+      if (p.type === 'view') return view(p);
+      if (p.type === 'intent') return intent(p);
+      return project(p, lead, why);
+    }
+
     /* Several projects fit: what I say first (one line or several), then a card each. */
     function choice(lines, list, link) {
       return { template: 'choice', says: [].concat(lines), cards: list.map(card), link: link || null };
@@ -98,6 +118,9 @@
     }
 
     function card(p) {
+      if (p.type === 'view' || p.type === 'intent') {
+        return { title: p.title, meta: p.type === 'view' ? voice.viewCard : '', text: (p.answers || [])[0] || '', cta: voice.open, pick: p.slug };
+      }
       var meta = [p.where, p.year || (p.type === 'note' ? p.date : '')].filter(Boolean).join(' · ');
       return { title: p.title, meta: meta, text: p.question || '', cta: voice.open, pick: p.slug };
     }
@@ -173,24 +196,66 @@
 
     /* ---------- what the visitor can do ---------- */
 
-    /* They typed something. In order: a project asked for by name, a topic by name,
-       talk, then a search through the work. */
-    function ask(text) {
+    /* They typed something. In order: a project asked for by name, a topic by name, talk,
+       then a search through everything I can answer: by meaning when the model answered (`found`,
+       see nlu.js), by keywords when it did not. */
+    function ask(text, found) {
       var cmd = Match.command(text, pieces, focus);
-      if (cmd) return cmd.action === 'open' ? open(cmd.slug) : pick(cmd.slug);
+      if (cmd) return traced(cmd.action === 'open' ? open(cmd.slug) : pick(cmd.slug), 'name', cmd.slug);
 
       var topic = site.themes.filter(function (t) { return Match.fold(t.label) === Match.fold(text); })[0];
-      if (topic) return theme(topic.id);
+      if (topic) return traced(theme(topic.id), 'topic', topic.id);
 
       var kind = Match.intent(text);
-      if (kind) return small(kind);
+      if (kind) return traced(small(kind), 'talk', kind);
 
+      if (found) return traced(byMeaning(text, found), 'meaning', found);
+      return traced(byKeywords(text), 'keywords');
+    }
+
+    /* The keyword scores the meaning search adds a little weight to: { slug: score }. */
+    function keywordScores(text) {
+      var out = {};
+      Match.search(index, text).filter(function (r) { return r.grounded; }).forEach(function (r) { out[r.piece.slug] = r.score; });
+      return out;
+    }
+
+    function traced(reply, how, about) {
+      reply.trace = { how: how };
+      if (how === 'meaning') {
+        reply.trace.verdict = about.verdict;
+        reply.trace.targets = about.targets.map(function (t) { return t.slug; });
+        reply.trace.score = Math.round(about.score * 1000) / 1000;
+      } else if (about) reply.trace.targets = [about];
+      return reply;
+    }
+
+    /* The decision from nlu.js, turned into a reply. An intent is only given when the page is sure:
+       "the closest I have" makes sense for my work, not for my rates. */
+    function byMeaning(text, found) {
+      var list = found.targets.map(function (t) { return bySlug[t.slug]; }).filter(Boolean);
+      if (found.verdict === 'none' || !list.length) return Match.wantsList(text) ? everything() : none(text);
+      if (found.verdict === 'choice') {
+        var shown = list.filter(function (p, i) { return i === 0 || p.type !== 'intent'; });
+        if (shown.length > 1) return choice(voice.closeCall, shown);
+        list = shown;
+      }
+      var top = list[0];
+      if (top.type === 'intent' && found.verdict !== 'answer') return none(text);
+      if (seen[top.slug] && top.type !== 'view' && top.type !== 'intent') {
+        return talk(voice.seen.replace('{title}', top.title), { link: storyLink(top), invite: true });
+      }
+      return answer(top, found.verdict === 'maybe' ? site.partialIntro : null, heard(text, top));
+    }
+
+    /* Without the model: the keyword search, as before. */
+    function byKeywords(text) {
       var v = Match.verdict(Match.search(index, text));
       if (v.kind === 'none') return Match.wantsList(text) ? everything() : none(text);
       var ok = v.results.filter(function (r) { return r.score >= Match.PARTIAL; });
       var top = ok[0];
-      if (top.piece.type === 'view') return view(top.piece);
-      ok = ok.filter(function (r) { return r.piece.type !== 'view'; }); /* a view is never a card, nor a suggestion after a project */
+      if (top.piece.type === 'view' || top.piece.type === 'intent') return answer(top.piece);
+      ok = ok.filter(function (r) { return r.piece.type !== 'view' && r.piece.type !== 'intent'; }); /* never a card, nor a suggestion after a project */
       var others = ok.slice(1).map(function (r) { return r.piece; });
 
       /* Already shown in this visit: offer the next angle, or say it's still the best one. */
@@ -222,7 +287,7 @@
     /* A card or a suggested question was tapped, or a project was asked for by name. */
     function pick(slug) {
       if (!bySlug[slug]) return nothingLeft();
-      return bySlug[slug].type === 'view' ? view(bySlug[slug]) : project(bySlug[slug]);
+      return answer(bySlug[slug]);
     }
 
     /* "Open Senz", "show me" once it has been presented: say so, then go to its page. */
@@ -256,7 +321,7 @@
       return choice(voice.all, work, { text: voice.allLink, href: base + '/work/' });
     }
 
-    return { ask: ask, pick: pick, theme: theme, reset: reset };
+    return { ask: ask, pick: pick, theme: theme, reset: reset, keywordScores: keywordScores };
   }
 
   var api = { create: create };

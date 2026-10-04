@@ -148,6 +148,44 @@ for (const [name, run, ok] of rounds) {
 }
 console.log(`conversation: ${roundPass}/${rounds.length}\n`);
 
+// By meaning (nlu.js): the page ranks like Python did when the index was built (build/embed.py).
+const Nlu = require('../src/assets/js/nlu.js');
+const nluDir = path.join(__dirname, '../src/assets/nlu');
+if (fs.existsSync(path.join(nluDir, 'probe.json'))) {
+  const nlu = JSON.parse(fs.readFileSync(path.join(nluDir, 'index.json'), 'utf8'));
+  const vectors = new Int8Array(fs.readFileSync(path.join(nluDir, 'vectors.bin')));
+  const probes = JSON.parse(fs.readFileSync(path.join(nluDir, 'probe.json'), 'utf8'));
+  const name = s => (nlu.targets.find(t => t.slug === s) || {}).kind === 'intent' ? 'intent:' + s : s;
+  let same = 0;
+  for (const p of probes) {
+    const r = Nlu.rank(nlu, vectors, Float32Array.from(p.vec), {});
+    const ok = r.verdict === p.verdict && r.targets.map(t => name(t.slug)).join() === p.targets.join();
+    if (ok) same++; else console.log(`MISS meaning: ${r.verdict} ${r.targets.map(t => t.slug)} (Python ${p.verdict} ${p.targets}) ← ${p.q}`);
+  }
+  console.log(`ranking by meaning: ${same}/${probes.length} decided as in Python (${nlu.rows.length} rows, ${nlu.targets.length} answers)`);
+
+  // What each decision becomes on the page.
+  const meaning = Respond.create(pageData);
+  const t = (slug, kind) => ({ slug, kind });
+  const asks = [
+    ['answer, a project', { verdict: 'answer', targets: [t('senz', 'work')], score: .6 }, r => r.template === 'project' && r.says.some(x => x.startsWith('Senz'))],
+    ['maybe, a project', { verdict: 'maybe', targets: [t('vrooom', 'work')], score: .4 }, r => r.template === 'project' && r.says[0] === pageData.site.partialIntro],
+    ['answer, a view', { verdict: 'answer', targets: [t('adopt-ai', 'view')], score: .6 }, r => r.template === 'talk' && r.invite],
+    ['answer, an intent with the form', { verdict: 'answer', targets: [t('hire', 'intent')], score: .6 }, r => r.template === 'talk' && r.form],
+    ['maybe, an intent', { verdict: 'maybe', targets: [t('hire', 'intent')], score: .4 }, r => r.template === 'none'],
+    ['choice, a project and a view', { verdict: 'choice', targets: [t('brainboard', 'work'), t('should-we-use-ai', 'view')], score: .5 }, r => r.template === 'choice' && r.cards.length === 2],
+    ['choice, an intent behind a project', { verdict: 'choice', targets: [t('tiptap', 'work'), t('me', 'intent')], score: .5 }, r => r.template === 'project'],
+    ['none', { verdict: 'none', targets: [], score: .2 }, r => r.template === 'none'],
+  ];
+  let replyPass = 0;
+  for (const [what, found, test] of asks) {
+    meaning.reset();
+    const r = meaning.ask('a question nobody would type', found);
+    if (test(r) && r.trace.how === 'meaning') replyPass++; else console.log(`MISS reply by meaning (${what}): ${r.template} ${JSON.stringify(r.says)}`);
+  }
+  console.log(`replies by meaning: ${replyPass}/${asks.length}\n`);
+}
+
 const redactions = [
   'Hi, I\'m Anna Schmidt from Example GmbH, reach me at anna@example.com or +49 170 1234567.',
   'We at Northwind need help with GDPR. See https://northwind.example/brief',

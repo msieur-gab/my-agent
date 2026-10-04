@@ -11,6 +11,7 @@ import json
 import os
 import re
 import shutil
+import sys
 from pathlib import Path
 
 import charts
@@ -203,15 +204,27 @@ def load_pieces(folder, kind):
     return pieces
 
 
+def load_said(folder, kind):
+    """Files whose text is said in the conversation, paragraph by paragraph, with no page of their own."""
+    d = CONTENT / folder
+    out = [p for p in load_pieces(folder, kind) if p["slug"] != "README"] if d.is_dir() else []
+    for v in out:
+        body = parse_frontmatter((d / f"{v['slug']}.md").read_text(encoding="utf-8"))[1]
+        v["says"] = [" ".join(para.split()) for para in re.split(r"\n\s*\n", body.strip()) if para.strip()]
+        del v["url"]
+    return out
+
+
+def load_intents():
+    """About me or what I do, not about a piece: where I am, whether I'm free, what I don't do.
+    README.md in that folder explains how to write one."""
+    return load_said("intents", "intent")
+
+
 def load_views():
     """My view on a common question that no project or note covers yet: what the page says, paragraph
     by paragraph, when a visitor asks it. README.md in that folder explains how to write one."""
-    views = [p for p in load_pieces("views", "view") if p["slug"] != "README"] if (CONTENT / "views").is_dir() else []
-    for v, f in zip(views, sorted(f for f in (CONTENT / "views").glob("*.md") if f.stem != "README")):
-        body = parse_frontmatter(f.read_text(encoding="utf-8"))[1]
-        v["says"] = [" ".join(para.split()) for para in re.split(r"\n\s*\n", body.strip()) if para.strip()]
-        del v["url"]                                   # a view has no page of its own
-    return views
+    return load_said("views", "view")
 
 
 # ---------------------------------------------------------------- layout
@@ -276,7 +289,7 @@ def meta_line(p):
 
 # ---------------------------------------------------------------- pages
 
-def build_home(site, work, notes, views):
+def build_home(site, work, notes, views, intents=()):
     by_slug = {p["slug"]: p for p in work + notes}
     # A topic only shows if at least one of its pieces is on the site.
     themes = [dict(t, pieces=[s for s in t["pieces"] if s in by_slug]) for t in site["themes"]]
@@ -290,7 +303,7 @@ def build_home(site, work, notes, views):
     data = {
         "site": dict({k: site[k] for k in ("partialIntro", "noMatch", "softInvite", "email", "countEndpoint",
                                            "voice", "smalltalk", "basePath")}, themes=themes),
-        "pieces": [public_piece(p) for p in work + notes + views],
+        "pieces": [public_piece(p) for p in work + notes + views + list(intents)],
     }
     data_json = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
     body = f"""
@@ -331,14 +344,14 @@ def build_home(site, work, notes, views):
     ld = {"@context": "https://schema.org", "@type": "Person", "name": site["name"],
           "jobTitle": site["role"], "url": site["baseUrl"], "address": site["location"]}
     return page(site, site["name"], body, description=" ".join(site["opening"]), path="/",
-                scripts=["/assets/js/match.js", "/assets/js/redact.js", "/assets/js/respond.js", "/assets/js/chat.js",
+                scripts=["/assets/js/match.js", "/assets/js/redact.js", "/assets/js/nlu.js", "/assets/js/respond.js", "/assets/js/chat.js",
                          "/assets/js/send.js", "/assets/js/agent.js"],
                 json_ld=ld, body_class="is-home")
 
 
 def public_piece(p):
     keep = ("slug", "type", "title", "url", "where", "year", "date", "context", "themes",
-            "intro", "about", "brief", "question", "answer", "keywords", "answers", "says", "next", "invite")
+            "intro", "about", "brief", "question", "answer", "keywords", "answers", "says", "next", "invite", "form")
     out = {k: p.get(k) for k in keep if p.get(k) not in (None, "")}
     if "url" in out:
         out["url"] = BASE + out["url"]
@@ -446,6 +459,7 @@ def main():
     work = load_pieces("work", "work")
     notes = load_pieces("notes", "note")
     views = load_views()
+    intents = load_intents()
 
     if OUT.exists():
         shutil.rmtree(OUT)
@@ -453,21 +467,35 @@ def main():
     if (CONTENT / "media").is_dir():
         shutil.copytree(CONTENT / "media", OUT / "media")
 
-    write("index.html", build_home(site, work, notes, views))
+    write("index.html", build_home(site, work, notes, views, intents))
     for p in work + notes:
         write(p["url"].strip("/") + "/index.html", build_piece(site, p))
     write("work/index.html", build_index(site, "Work", "Commissioned and self-initiated, each told from the question that changed it.", work, "/work/", site["themes"], True))
     write("notes/index.html", build_index(site, "Notes", "Writing, ideas and positions that feed the work.", notes, "/notes/", site["themes"], False))
     write("how-this-site-works/index.html", build_plain_page(site, "how-this-site-works"))
 
-    write("answers.json", json.dumps({"pieces": [public_piece(p) for p in work + notes + views]}, ensure_ascii=False, indent=1))
+    write("answers.json", json.dumps({"pieces": [public_piece(p) for p in work + notes + views + intents]}, ensure_ascii=False, indent=1))
     urls = ["/", "/work/", "/notes/", "/how-this-site-works/"] + [p["url"] for p in work + notes]
     write("sitemap.xml", build_sitemap(site, urls))
     write("robots.txt", f"User-agent: *\nAllow: /\n\nSitemap: {site['baseUrl'].rstrip('/')}/sitemap.xml\n")
     write("llms.txt", build_llms(site, work, notes))
     write(".nojekyll", "")
 
-    print(f"Built {len(work)} work pieces, {len(notes)} notes, {len(views)} views → {OUT.relative_to(ROOT)}/")
+    print(f"Built {len(work)} work pieces, {len(notes)} notes, {len(views)} views, {len(intents)} intents → {OUT.relative_to(ROOT)}/")
+    check_index()
+
+
+def check_index():
+    """The page searches an index built separately (build/embed.py, which needs the model's Python
+    runtime). Say so when the content has changed since: the page would compare against old text."""
+    sys.path.insert(0, str(ROOT / "build"))
+    import passages as cut
+    targets = cut.load_targets(str(ROOT))
+    now = cut.fingerprint(targets, cut.rows(targets))
+    path = SRC / "assets" / "nlu" / "index.json"
+    built = json.loads(path.read_text(encoding="utf-8")).get("fingerprint") if path.exists() else None
+    if built != now:
+        print("NOTE: content changed since the search index was built. Run build/embed.py, then build again.")
 
 
 if __name__ == "__main__":

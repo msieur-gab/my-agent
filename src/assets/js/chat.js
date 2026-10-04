@@ -37,7 +37,11 @@
        getReply() is called when its turn comes, so replies are worked out in the order they were asked. */
     function round(said, label, getReply) {
       queue = queue.then(function () {
-        return show(turn(said, label), getReply());
+        var t = turn(said, label);
+        /* a reply can take a moment (the model reading the question): it is awaited, never skipped */
+        return Promise.resolve(getReply()).then(function (reply) {
+          return show(t, reply);
+        });
       }).catch(function (e) { console.error(e); });
       return queue;
     }

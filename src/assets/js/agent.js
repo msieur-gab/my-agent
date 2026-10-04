@@ -1,5 +1,6 @@
 /* The home page conversation, wired together:
-     match.js    understands what was typed (search, typos, small talk, commands)
+     match.js    understands what was typed by its words (typos, small talk, commands, keyword search)
+     nlu.js      understands it by meaning, with a small model in the visitor's browser
      respond.js  decides the reply, as one of four templates
      chat.js     shows it, always in the same order
      send.js     the form that reaches me
@@ -37,7 +38,11 @@
     invite: site.softInvite,
     onAsk: function (text) {
       count('question', text);
-      round(text, 'You asked', function () { return brain.ask(text); });
+      /* By meaning when the model is there; by keywords when it is not (not loaded in time, or no support). */
+      round(text, 'You asked', function () {
+        if (!window.Nlu) return brain.ask(text);
+        return Nlu.find(text, brain.keywordScores(text)).then(function (found) { return brain.ask(text, found); });
+      });
     },
     onChoice: choose,
     onForm: function (turn, text) { Send.open(turn, text, { email: site.email }); },
@@ -60,6 +65,10 @@
     }
     round(said, 'You picked', function () { return brain.pick(item.pick); });
   }
+
+  /* The model starts loading when the visitor shows they are about to ask, never on page load. */
+  var field = document.getElementById('q');
+  if (window.Nlu && field) field.addEventListener('focus', function () { Nlu.warm().catch(function () {}); }, { once: true });
 
   /* The topic cards that open the conversation. */
   document.querySelectorAll('#themes .chip').forEach(function (chip) {

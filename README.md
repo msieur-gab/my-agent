@@ -9,9 +9,13 @@ Visitors ask a question or pick a theme; the page answers with a piece of work, 
 python3 build/build.py        # builds the site into public/
 cd public && python3 -m http.server 8000
 node tests/check.js           # checks matching and redaction (after a build)
+
+# after changing any text or any `answers:` line (needs onnxruntime, tokenizers, numpy):
+python3 build/embed.py        # rebuilds the search index in src/assets/nlu/; the build says when it is stale
+python3 tests/routing.py -v   # rough check of where typed questions land (tests/routing.json)
 ```
 
-No dependencies.
+The site itself has no dependencies.
 
 ## Publishing
 
@@ -29,7 +33,15 @@ content/site.json        opening line, themes, "no answer" replies, contact deta
 content/work/*.md        one file per project
 content/notes/*.md       one file per note
 content/pages/*.md       plain pages (how this site works)
+content/views/*.md       my view on a common question no project covers (see its README)
+content/intents/*.md     about me or what I do: where I am, rates, what I don't do (see its README)
 src/assets/js/match.js   understands what was typed: search, typos, small talk, commands
+src/assets/js/nlu.js     understands a question by meaning, with a small model in the visitor's browser,
+                         and decides: one answer, a choice, "the closest I have", or nothing
+src/assets/js/nlu.worker.js  runs that model off the main thread
+src/assets/nlu/          the prepared index (build/embed.py) and a browser self-test (test.html)
+src/assets/models/, src/assets/vendor/  the model and its runtime, served from this site (43 MB, loaded on first focus)
+build/passages.py        what every answer is cut into before it is embedded
 src/assets/js/respond.js decides the reply, as one of four templates (project, choice, talk, none)
 src/assets/js/chat.js    shows a reply, always in the same order; looks after the question field
 src/assets/js/send.js    the form that reaches me
