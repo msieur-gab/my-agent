@@ -1,0 +1,20 @@
+# Gabriel Baude
+
+> Designer and creative technologist, Munich, working across Europe. I answer the questions nobody dares to ask.
+
+Every answer on this site comes from the work below. Nothing is generated.
+
+## Work
+
+- [AutoFlow](https://msieur-gab.github.io/my-agent/work/autoflow/): Why can only legal see where the risk is? Draw how data moves through the company by hand. A tiny model running in the browser turns the drawing into a working pipeline that anonymises, encrypts and documents the data, without it ever leaving the device.
+- [Dowgo](https://msieur-gab.github.io/my-agent/work/dowgo/): What if the data room showed what's missing and who has to act, instead of only storing files? A two-week engagement that redesigned a due diligence data room around a conversational layer. The file system stays, and an agent beside it surfaces what's missing, takes delegation in plain language and points to the next action. Delivered as working code, in production.
+- [Pebbble](https://msieur-gab.github.io/my-agent/work/pebbble/): What if a parent's voice lived in something the child can hold, that nobody can block? Hand-formed stones with a sealed NFC tag carrying encrypted voice messages. No screen, no account. Holding the stone is the key, and a message can wait years to open, like one for an 18th birthday.
+- [Senz](https://msieur-gab.github.io/my-agent/work/senz/): What if testing an idea cost less than the meeting about it? Experts sketch an interface on paper and get a deployable MVP built on the company's own design system. 96% less time from idea to MVP, six months before Microsoft's Sketch2Code and seven years before Figma Make.
+- [Vrooom](https://msieur-gab.github.io/my-agent/work/vrooom/): What if the digital part only existed to send parents and kids outside together? A hand-planed wooden car with an NFC tag. Tap it at a playground or a walk to check in and earn a badge, then print it, colour it and glue it into a handmade travel passport. The phone witnesses the adventure, it doesn't run it.
+
+## Notes
+
+
+## About this site
+
+- [How this site works](https://msieur-gab.github.io/my-agent/how-this-site-works/)

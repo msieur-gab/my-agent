@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://msieur-gab.github.io/my-agent/sitemap.xml
