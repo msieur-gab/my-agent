@@ -137,14 +137,10 @@
       return best[1] >= SURE && best[0] !== 'problem' && best[0] !== 'out_of_scope' ? best[0] : null;
     }
 
-    function named(text) {
-      var f = ' ' + Match.fold(text) + ' ';
-      return pieces.some(function (p) { return f.indexOf(' ' + Match.fold(p.title) + ' ') !== -1; });
-    }
-
-    /* They typed something. In order: a project asked for by name, a topic by name, then the work
-       when it clearly answers (a question I listed for a piece, or a piece named), then talk, then
-       the closest piece, then the honest "no answer". */
+    /* They typed something. In order: a project asked for by name, a topic by name, the work when it
+       has anything to show, then a written reply from content/intents.md, then the honest "no answer".
+       The model knows what kind of sentence it is, not what it is about: "have you worked with AI?"
+       reads like a question about my background, but the work on AI is the better answer. */
     function ask(text) {
       var cmd = Match.command(text, pieces, focus);
       if (cmd) return cmd.action === 'open' ? open(cmd.slug) : pick(cmd.slug);
@@ -153,9 +149,10 @@
       if (topic) return theme(topic.id);
 
       var v = Match.verdict(Match.search(index, text));
-      var said = v.kind === 'answer' || named(text) ? null : kind(text);
-      if (said) return small(said, text);
-      if (v.kind === 'none') return none(text);
+      if (v.kind === 'none') {
+        var said = kind(text);
+        return said ? small(said, text) : none(text);
+      }
       var ok = v.results.filter(function (r) { return r.score >= Match.PARTIAL; });
       var top = ok[0];
       var others = ok.slice(1).map(function (r) { return r.piece; });
