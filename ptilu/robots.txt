@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://msieur-gab.github.io/my-agent/ptilu/sitemap.xml
