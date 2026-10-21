@@ -7,6 +7,14 @@ const Redact = require('../src/assets/js/redact.js');
 
 const data = JSON.parse(fs.readFileSync(path.join(__dirname, '../public/answers.json'), 'utf8'));
 const index = Match.prepare(data.pieces);
+global.atob = global.atob || (s => Buffer.from(s, 'base64').toString('binary'));
+const Respond = require('../src/assets/js/respond.js');
+// the page's own data: site wording, the topics that have at least one piece on the site, the intent model
+const pageData = JSON.parse(fs.readFileSync(path.join(__dirname, '../public/index.html'), 'utf8')
+  .match(/id="answers">(.*?)<\/script>/s)[1].replace(/<\\\//g, '</'));
+const kind = Respond.create(pageData).kind;
+// what one message gets in a fresh visit: the name of the written reply, 'work' (a piece or a choice), or 'none'
+const reply = q => { const r = Respond.create(pageData).ask(q); return r.template === 'talk' ? r.kind || 'talk' : r.template === 'none' ? 'none' : 'work'; };
 
 // [question, expected slug, or 'none' when the honest answer is "I haven't done that"]
 const cases = [
@@ -63,7 +71,7 @@ for (const [q, want] of live(typos)) {
 }
 console.log(`typos: ${typoPass}/${live(typos).length}`);
 
-// Small talk: answered as talk, and never swallowing a real question.
+// Small talk and questions about me: told apart by the intent model (content/intents.md).
 const talk = [
   ['Hello!', 'greeting'], ['good morning', 'greeting'], ['Thanks a lot', 'thanks'],
   ['Are you an AI?', 'how'], ['How does this work?', 'how'], ['Who are you?', 'who'],
@@ -71,7 +79,7 @@ const talk = [
 ];
 let talkPass = 0;
 for (const [q, want] of talk) {
-  const got = Match.intent(q);
+  const got = kind(q);
   if (got === want) talkPass++; else console.log(`MISS intent ${got} (want ${want}) ← ${q}`);
 }
 // Black holes: everyday sentences that share a word with a piece but are not about it.
@@ -82,7 +90,7 @@ const fell = holes.filter(q => Match.verdict(Match.search(index, q)).kind !== 'n
 fell.forEach(q => console.log(`MISS black hole: a project was shown ← ${q}`));
 const lists = ['show me all your work', 'what have you done', 'list your projects', 'portfolio', 'do you have case studies', 'can I see your work'];
 const notLists = ['what do you think about work', 'do you work remotely', 'I need help'];
-const listMiss = lists.filter(q => !Match.wantsList(q)).concat(notLists.filter(q => Match.wantsList(q)));
+const listMiss = lists.filter(q => kind(q) !== 'list').concat(notLists.filter(q => kind(q) === 'list'));
 listMiss.forEach(q => console.log(`MISS list request misread ← ${q}`));
 console.log(`black holes: ${holes.length - fell.length}/${holes.length}, list requests: ${lists.length + notLists.length - listMiss.length}/${lists.length + notLists.length}`);
 
@@ -109,15 +117,29 @@ const hijacked = cases.filter(([q]) => Match.command(q, data.pieces, 'senz'));
 hijacked.forEach(([q]) => console.log(`MISS real question read as a command ← ${q}`));
 console.log(`commands: ${cmdPass}/${commands.length}, real questions read as commands: ${hijacked.length}`);
 
-const swallowed = cases.filter(([q]) => Match.intent(q));
-swallowed.forEach(([q]) => console.log(`MISS real question read as small talk ← ${q}`));
+const swallowed = cases.filter(([q, want]) => want !== 'none' && want !== 'any' && reply(q) !== 'work' && onSite.has(want));
+swallowed.forEach(([q]) => console.log(`MISS real question answered with talk instead of the work ← ${q}`));
 console.log(`small talk: ${talkPass}/${talk.length}, real questions swallowed: ${swallowed.length}\n`);
 
+// Held-out (tests/intents-held-out.md): sentences the model never saw. Wrong is the number that matters:
+// a written reply to the wrong kind of message. Abstaining is safe: the search through the work decides.
+const held = [];
+let cur = null;
+for (const line of fs.readFileSync(path.join(__dirname, 'intents-held-out.md'), 'utf8').split('\n')) {
+  const h = /^## ([a-z_]+)/.exec(line);
+  if (h) cur = h[1]; else if (cur && line.startsWith('- ')) held.push([line.slice(2), cur]);
+}
+const tally = { right: 0, abstained: 0, wrong: 0 };
+for (const [q, want] of held) {
+  const got = kind(q);
+  const guard = want === 'problem' || want === 'out_of_scope';
+  const o = guard ? (got ? 'wrong' : 'right') : got === want ? 'right' : got ? 'wrong' : 'abstained';
+  tally[o]++;
+  if (o !== 'right') console.log(`${o === 'wrong' ? 'WRONG' : 'abstained'} ${String(got)} (want ${want}) ← ${q}`);
+}
+console.log(`intents held-out (${held.length}): right ${tally.right}, abstained ${tally.abstained}, wrong ${tally.wrong}\n`);
+
 // The conversation, end to end: what each kind of message gets back (respond.js, one visit, in order).
-const Respond = require('../src/assets/js/respond.js');
-// the page's own data: site wording, and the topics that have at least one piece on the site
-const pageData = JSON.parse(fs.readFileSync(path.join(__dirname, '../public/index.html'), 'utf8')
-  .match(/id="answers">(.*?)<\/script>/s)[1].replace(/<\\\//g, '</'));
 const siteData = pageData.site;
 const base = siteData.basePath || '';   // '' on a root domain, '/my-agent' on GitHub Pages
 const brain = Respond.create(pageData);
@@ -130,7 +152,8 @@ const rounds = [
   ['the same project is not presented twice', () => brain.ask('How can my team test an idea before we commit a budget?'), r => r.template === 'talk' && /still my best answer/.test(r.says[0])],
   ['"show me all your work" lists every project', () => brain.ask('show me all your work'), r => r.template === 'choice' && r.cards.length === data.pieces.filter(p => p.type === 'work').length],
   ['hello is answered as talk', () => brain.ask('hello'), r => r.template === 'talk' && r.next.items.length === siteData.themes.length],
-  ['no match invites the question', () => brain.ask('Do you do logo design?'), r => r.template === 'none' && r.form.text === 'Do you do logo design?'],
+  ['a question about me gets my written answer and the form', () => brain.ask('Do you do logo design?'), r => r.template === 'talk' && r.form.text === 'Do you do logo design?'],
+  ['no match invites the question', () => brain.ask('How do we migrate our SAP system?'), r => r.template === 'none' && r.form.text === 'How do we migrate our SAP system?'],
   ['after "start over" a project can be presented again', () => { brain.reset(); return brain.theme('ideas'); }, r => r.template === 'project'],
 ];
 let roundPass = 0;

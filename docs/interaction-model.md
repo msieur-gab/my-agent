@@ -34,7 +34,9 @@ Everything stays extractive: every sentence the page says is written in `content
 8. **Only the visitor's own words are shown as theirs.** A typed sentence or a tapped label gets a
    bubble; a tapped card does not get an invented sentence.
 9. **It answers talk as talk.** Hello, thanks, who are you, are you an AI, can I hire you, tell me
-   more. Written replies, matched on the whole message so a real question is never swallowed.
+   more, and questions about me (where, rate, languages, process…). Written replies in
+   `content/intents.md`, told apart by a small intent model. A question my work clearly answers, or
+   one naming a project, goes to the work first, so a real question is never swallowed.
 10. **It forgives typos.** A word it doesn't know is read as the closest word it does know: one slip
     for words of five letters or more, two for nine or more. Project names too.
 11. **It never dead-ends.** No match gives the invitation to send the question, and the topics.
@@ -55,7 +57,9 @@ what the agent says → why ("you mentioned …") → cards → form → link �
 
 ## How the code is split
 
-- `match.js` understands what was typed: search with an evidence rule, typos, small talk, commands.
+- `nlu.js` says what kind of message it is: talk, a question about me, a problem, off-topic. A ptiLU intent
+  model trained from `content/intents.md`; below 0.45 it abstains.
+- `match.js` finds the piece: search with an evidence rule, typos, a project named.
 - `respond.js` decides the reply and returns it as plain data, one of the four templates. No page code,
   so `tests/check.js` runs whole conversations against it.
 - `chat.js` shows any reply in the fixed order above and looks after the question field. It knows

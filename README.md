@@ -3,6 +3,10 @@
 The home page of Gabriel Baude's site: a conversation instead of a showcase.
 Visitors ask a question or pick a theme; the page answers with a piece of work, the closest one, or invites them to send the question. Nothing is generated, nothing is stored on the visitor's device.
 
+What kind of message it is (hello, a question about me, a problem, off-topic) is read by a small intent model,
+the intent part of [ptiLU](https://github.com/msieur-gab/minios-nlu), trained from `content/intents.md`
+when the site is built. About 40 KB (17 KB gzipped), a second to train, well under a millisecond per message, no network.
+
 ## Run it
 
 ```sh
@@ -11,7 +15,7 @@ cd public && python3 -m http.server 8000
 node tests/check.js           # checks matching and redaction (after a build)
 ```
 
-No dependencies.
+Python and Node, no packages.
 
 ## Publishing
 
@@ -26,16 +30,19 @@ Netlify would also work as is (`netlify.toml`).
 
 ```
 content/site.json        opening line, themes, "no answer" replies, contact details
+content/intents.md       what the agent understands (hello, about me…) and what it answers
 content/work/*.md        one file per project
 content/notes/*.md       one file per note
 content/pages/*.md       plain pages (how this site works)
-src/assets/js/match.js   understands what was typed: search, typos, small talk, commands
+src/assets/js/nlu.js     what kind of message it is (the model, trained from intents.md)
+src/assets/js/match.js   finds the piece that answers: search, typos, a project named
 src/assets/js/respond.js decides the reply, as one of four templates (project, choice, talk, none)
 src/assets/js/chat.js    shows a reply, always in the same order; looks after the question field
 src/assets/js/send.js    the form that reaches me
 src/assets/js/redact.js  removes names and contact details before anything is sent
 src/assets/js/intro.js   the opening lines, shown one after another
 src/assets/js/agent.js   wires the above together
+build/train.js           content/intents.md → the intent model (run by build.py)
 build/build.py           content → static, crawlable pages + answers.json, sitemap, robots.txt, llms.txt
 docs/                    site foundation, interaction model and the questions log
 .github/workflows/       build and deploy to GitHub Pages
@@ -68,6 +75,13 @@ answers:                     # real visitor questions this piece answers
 ```
 
 Then rebuild. The piece appears on its own page, in the "Everything here" list, in `llms.txt`, and in the conversation.
+
+## Teaching it
+
+Add sentences under the right `## name` in `content/intents.md`, or a new `## name` with its `reply:` and
+`offer:`, then rebuild. When the model isn't sure (below 0.45) it stays quiet and the search through the
+work decides, then the honest "no answer". `node tests/check.js` scores it on `tests/intents-held-out.md`,
+sentences it never saw: "wrong" (a written reply to the wrong kind of message) is the number to keep at zero.
 
 ## Not wired yet
 

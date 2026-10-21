@@ -16,12 +16,15 @@
 (function (root) {
   var node = typeof module !== 'undefined' && module.exports;
   var Match = node ? require('./match.js') : root.Match;
+  var NLU = node ? require('./nlu.js') : root.NLU;
   var CLOSE = 0.8; /* a second project within 80% of the best one is a close call */
+  var SURE = 0.45; /* below this share the model abstains, and the search through the work decides */
 
   function create(data) {
     var site = data.site, voice = site.voice, pieces = data.pieces;
     var base = site.basePath || '';
     var index = Match.prepare(pieces);
+    var nlu = NLU.create(data.nlu.model), replies = data.nlu.replies;
     var bySlug = {};
     pieces.forEach(function (p) { bySlug[p.slug] = p; });
 
@@ -127,8 +130,21 @@
 
     /* ---------- what the visitor can do ---------- */
 
-    /* They typed something. In order: a project asked for by name, a topic by name,
-       talk, then a search through the work. */
+    /* What kind of message it is (content/intents.md): a name from that file, or null when the
+       model isn't sure, or when it's a problem or off-topic, which the search through the work handles. */
+    function kind(text) {
+      var best = nlu.classify(text)[0];
+      return best[1] >= SURE && best[0] !== 'problem' && best[0] !== 'out_of_scope' ? best[0] : null;
+    }
+
+    function named(text) {
+      var f = ' ' + Match.fold(text) + ' ';
+      return pieces.some(function (p) { return f.indexOf(' ' + Match.fold(p.title) + ' ') !== -1; });
+    }
+
+    /* They typed something. In order: a project asked for by name, a topic by name, then the work
+       when it clearly answers (a question I listed for a piece, or a piece named), then talk, then
+       the closest piece, then the honest "no answer". */
     function ask(text) {
       var cmd = Match.command(text, pieces, focus);
       if (cmd) return cmd.action === 'open' ? open(cmd.slug) : pick(cmd.slug);
@@ -136,11 +152,10 @@
       var topic = site.themes.filter(function (t) { return Match.fold(t.label) === Match.fold(text); })[0];
       if (topic) return theme(topic.id);
 
-      var kind = Match.intent(text);
-      if (kind) return small(kind);
-
       var v = Match.verdict(Match.search(index, text));
-      if (v.kind === 'none') return Match.wantsList(text) ? everything() : none(text);
+      var said = v.kind === 'answer' || named(text) ? null : kind(text);
+      if (said) return small(said, text);
+      if (v.kind === 'none') return none(text);
       var ok = v.results.filter(function (r) { return r.score >= Match.PARTIAL; });
       var top = ok[0];
       var others = ok.slice(1).map(function (r) { return r.piece; });
@@ -159,16 +174,21 @@
       return project(top.piece, v.kind === 'answer' ? null : site.partialIntro, heard(text, top.matched), others);
     }
 
-    function small(kind) {
-      var line = site.smalltalk[kind];
+    /* A written reply from content/intents.md, with what it offers. */
+    function small(kind, text) {
+      if (kind === 'list') return everything();
       if (kind === 'more') {
         var another = unseen(pool)[0];
         return another ? project(another, voice.another, null, pool) : nothingLeft();
       }
-      if (kind === 'contact') return talk(line, { form: { text: '' } });
-      if (kind === 'thanks') return talk(line);
-      if (kind === 'how') return talk(line, { link: { text: voice.howLink, href: base + '/how-this-site-works/' }, next: topics() });
-      return talk(line, { next: topics() });
+      var r = replies[kind];
+      var extra = {
+        topics: { next: topics() },
+        form: { form: { text: kind === 'contact' ? '' : text } },
+        how: { link: { text: voice.howLink, href: base + '/how-this-site-works/' }, next: topics() },
+        work: { link: { text: voice.allLink, href: base + '/work/' } }
+      }[r.offer];
+      return talk(r.line, extra);
     }
 
     /* A card or a suggested question was tapped, or a project was asked for by name. */
@@ -200,7 +220,7 @@
       return choice(voice.all, work, { text: voice.allLink, href: base + '/work/' });
     }
 
-    return { ask: ask, pick: pick, theme: theme, reset: reset };
+    return { ask: ask, pick: pick, theme: theme, reset: reset, kind: kind };
   }
 
   var api = { create: create };

@@ -1,4 +1,5 @@
-/* Matching: finds the piece of work that best answers a question.
+/* Matching: finds the piece of work that best answers a question, and a project asked for by name.
+   What kind of message it is (hello, about me, a problem…) is nlu.js's job.
    Extractive only: it ranks existing pieces and never writes text.
    Works in the browser (window.Match) and in Node (module.exports) for tests. */
 (function (root) {
@@ -152,35 +153,6 @@
     return { kind: results[0].score >= STRONG && results[0].sure ? 'answer' : 'partial', results: results };
   }
 
-  /* "Show me all your work", "portfolio", "do you have case studies": asking for the whole list.
-     Only checked when no piece answers the message, so "show me your work on GDPR" still finds its piece. */
-  var LIST_NOUN = /(^| )(work|works|projects?|portfolio|case studies|examples|everything|pieces)( |$)/;
-  var LIST_VERB = /(^| )(show|see|list|browse|view|all|everything|portfolio|examples|have)( |$)/;
-  var LIST_PHRASE = /^what (have you (done|made|built)|else (do you have|is there)|do you have)$/;
-
-  function wantsList(text) {
-    var f = fold(text);
-    return f.split(' ').length <= 8 && ((LIST_NOUN.test(f) && LIST_VERB.test(f)) || LIST_PHRASE.test(f));
-  }
-
-  /* Things people say to a person that aren't questions about the work.
-     Whole-message patterns only, so a real question is never swallowed. */
-  var INTENTS = [
-    ['greeting', /^(hi|hello|hey|hallo|bonjour|salut|servus|guten tag|good (morning|afternoon|evening))( there| gabriel| gab)?$/],
-    ['thanks', /^(ok |okay |great |nice |perfect )?(thanks|thank you|thx|merci|danke|cheers)( a lot| very much| so much| gabriel| gab)?$/],
-    ['more', /^(more|tell me more|go on|what else|anything else|next|another( one| example)?|show me (more|another)( one)?)$/],
-    ['how', /^((are|r) (you|u) (an? |the )?(real |actual )?(ai|bot|robot|llm|chatbot|human|person|real|chatgpt|gpt|claude|machine)|is this (an? )?(ai|bot|chatbot|llm|chatgpt|real)|how does (this|it|the (site|page))( site| page)? work|how do you work|what is this( site| page)?|who am i (talking|speaking|chatting) (to|with))/],
-    ['who', /^(who are you|who is (gabriel|gab|this)$|what do you do|tell me about (yourself|you)|about you|what(s| is) your (job|background|story))/],
-    ['what', /^(help|what can i ask|what should i ask|what can you (do|answer|tell me)|what do you (know|have))/],
-    ['contact', /^(contact|get in touch|how (can|do) i (contact|reach|hire|book) you|can i (contact|hire|reach|call|email|book) you|are you available|can we talk|lets talk|i (want|would like) to (talk|work) (to|with) you|what(s| is) your email)/]
-  ];
-
-  function intent(text) {
-    var f = fold(text);
-    for (var i = 0; i < INTENTS.length; i++) if (INTENTS[i][1].test(f)) return INTENTS[i][0];
-    return null;
-  }
-
   /* A typed sentence that asks for a project: by its name, or "this one" for the project in focus.
      Returns { action: 'about' | 'open', slug } or null. The same two actions as tapping a card
      and tapping "Read the full story". A real question that mentions a project is left to search(). */
@@ -224,7 +196,7 @@
     return null;
   }
 
-  var api = { wantsList: wantsList, command: command, fold: fold, prepare: prepare, search: search, verdict: verdict, terms: terms, intent: intent, STRONG: STRONG, PARTIAL: PARTIAL };
+  var api = { command: command, fold: fold, prepare: prepare, search: search, verdict: verdict, terms: terms, STRONG: STRONG, PARTIAL: PARTIAL };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.Match = api;
 })(this);

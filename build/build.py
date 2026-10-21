@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Build the site into public/.
 
-No dependencies. Reads content/ (site.json, work/*.md, notes/*.md, pages/*.md),
+Needs Node for one step: build/train.js trains the intent model from content/intents.md (about a second).
+Reads content/ (site.json, intents.md, work/*.md, notes/*.md, pages/*.md),
 writes static, crawlable HTML plus answers.json, sitemap.xml, robots.txt and llms.txt.
 
     python3 build/build.py
@@ -11,6 +12,7 @@ import json
 import os
 import re
 import shutil
+import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -219,7 +221,13 @@ def meta_line(p):
 
 # ---------------------------------------------------------------- pages
 
-def build_home(site, work, notes):
+def train():
+    """The intent model and its replies, from content/intents.md."""
+    out = subprocess.run(["node", str(ROOT / "build" / "train.js")], capture_output=True, text=True, check=True)
+    return json.loads(out.stdout)
+
+
+def build_home(site, work, notes, nlu):
     by_slug = {p["slug"]: p for p in work + notes}
     # A topic only shows if at least one of its pieces is on the site.
     themes = [dict(t, pieces=[s for s in t["pieces"] if s in by_slug]) for t in site["themes"]]
@@ -232,8 +240,9 @@ def build_home(site, work, notes):
 
     data = {
         "site": dict({k: site[k] for k in ("partialIntro", "noMatch", "softInvite", "email", "countEndpoint",
-                                           "voice", "smalltalk", "basePath")}, themes=themes),
+                                           "voice", "basePath")}, themes=themes),
         "pieces": [public_piece(p) for p in work + notes],
+        "nlu": nlu,
     }
     data_json = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
     body = f"""
@@ -267,7 +276,7 @@ def build_home(site, work, notes):
     ld = {"@context": "https://schema.org", "@type": "Person", "name": site["name"],
           "jobTitle": site["role"], "url": site["baseUrl"], "address": site["location"]}
     return page(site, site["name"], body, description=site["opening"], path="/",
-                scripts=["/assets/js/match.js", "/assets/js/redact.js", "/assets/js/respond.js", "/assets/js/chat.js",
+                scripts=["/assets/js/nlu.js", "/assets/js/match.js", "/assets/js/redact.js", "/assets/js/respond.js", "/assets/js/chat.js",
                          "/assets/js/send.js", "/assets/js/intro.js", "/assets/js/agent.js"],
                 json_ld=ld, body_class="is-home")
 
@@ -373,7 +382,7 @@ def main():
         shutil.rmtree(OUT)
     shutil.copytree(SRC / "assets", OUT / "assets")
 
-    write("index.html", build_home(site, work, notes))
+    write("index.html", build_home(site, work, notes, train()))
     for p in work + notes:
         write(p["url"].strip("/") + "/index.html", build_piece(site, p))
     write("work/index.html", build_index(site, "Work", "Commissioned and self-initiated, each told from the question that changed it.", work, "/work/", site["themes"], True))
