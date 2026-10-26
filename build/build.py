@@ -11,6 +11,7 @@ import json
 import os
 import re
 import shutil
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -379,6 +380,19 @@ def build_sitemap(site, urls):
 
 # ---------------------------------------------------------------- main
 
+def embed_bank():
+    """The vectors of the bank's phrasings, with the model the browser loads (build/embed.py). Optional:
+    without the Python packages the site still builds, and the page matches by words only."""
+    sys.path.insert(0, str(ROOT / "build"))
+    try:
+        import embed
+    except ImportError as e:
+        print(f"bank: no vectors ({e.name} is not installed; pip install -r requirements.txt). The page will match by words only.")
+        return
+    n, m = embed.embed_bank(OUT / "bank.json")
+    print(f"bank: {n} phrasings of {m} entries embedded")
+
+
 def write(rel, text):
     path = OUT / rel
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -404,13 +418,14 @@ def main():
     write("how-this-site-works/index.html", build_plain_page(site, "how-this-site-works"))
 
     write("answers.json", json.dumps({"pieces": [public_piece(p) for p in work + notes]}, ensure_ascii=False, indent=1))
-    # The bank, without vectors. `node build/embed.mjs` adds them (same file); without them the page matches by words only.
+    # The bank. build/embed.py adds the vectors when onnxruntime is installed; without them the page matches by words only.
     bank = load_bank()
     missing = sorted({x["leads"] for x in bank if x["leads"] and ":" not in x["leads"]
                       and x["leads"] not in ("invite", "all", "contact", "more")} - {p["slug"] for p in work + notes})
     if missing:
         print(f"bank: {len(missing)} entries lead to pieces that are not on the site: {', '.join(missing)}")
     write("bank.json", json.dumps({"entries": bank, "model": None, "vectors": None}, ensure_ascii=False))
+    embed_bank()
     urls = ["/", "/work/", "/notes/", "/how-this-site-works/"] + [p["url"] for p in work + notes]
     write("sitemap.xml", build_sitemap(site, urls))
     write("robots.txt", f"User-agent: *\nAllow: /\n\nSitemap: {site['baseUrl'].rstrip('/')}/sitemap.xml\n")

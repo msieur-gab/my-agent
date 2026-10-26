@@ -8,16 +8,14 @@ Every reply to a typed question comes from one file, `content/bank.md`: the ques
 ## Run it
 
 ```sh
-python3 build/build.py        # builds the site into public/
-npm ci && node build/embed.mjs   # adds the bank's vectors to public/bank.json (once per change to bank.md)
+pip install -r requirements.txt   # once: onnxruntime, tokenizers, numpy, to embed the bank
+python3 build/build.py            # builds the site into public/, bank vectors included
 cd public && python3 -m http.server 8000
-node tests/check.js           # checks the old matching and the redaction
-node tests/talk.mjs           # runs a whole conversation through the bank and the model
-node tests/eval.mjs --sweep   # measures the matchers against held-out questions → tests/eval-results.md
+python3 tests/eval.py --sweep     # measures the matching against held-out questions → tests/eval-results.md
 ```
 
 The site has no dependencies: the browser loads the vendored model and library from `src/assets/`.
-The build has one, `@xenova/transformers`, to embed the bank with the same files. Without that step the page still runs, matching by words only.
+The build has three Python packages to embed the bank with the same model file; without them the site still builds and the page matches by words only. Nothing here needs Node: the two JavaScript checks (`tests/check.js`, `tests/talk.mjs`) run in the GitHub Action.
 
 ## Publishing
 
@@ -47,8 +45,9 @@ src/assets/js/agent.js   wires the above together
 src/assets/models/       the embedding model, int8 ONNX (Xenova/all-MiniLM-L6-v2)
 src/assets/js/vendor/    transformers.js 2.17 and its WASM runtime
 build/build.py           content → static, crawlable pages + answers.json, bank.json, sitemap, robots.txt, llms.txt
-build/embed.mjs          bank.json + vectors, with the same model the browser loads
-tests/eval.mjs           the measurements (held-out.json, bank-eval.json) → tests/eval-results.md
+build/embed.py           the bank's vectors, with the same model file the browser loads (onnxruntime)
+tests/eval.py            the measurements (held-out.json, bank-eval.json) → tests/eval-results.md
+tests/talk.mjs           a whole conversation through respond.js (Action only)
 docs/                    site foundation, interaction model, the questions log, the matcher evaluation
 .github/workflows/       build and deploy to GitHub Pages
 ```
@@ -65,7 +64,7 @@ say: Pebbble is a PWA launched from an NFC tap: no installation, no icon, nothin
 leads: pebbble
 ```
 
-Then rebuild (`python3 build/build.py && node build/embed.mjs`). The rules are at the top of that file.
+Then rebuild. The rules are at the top of that file.
 
 ## Adding a piece
 
