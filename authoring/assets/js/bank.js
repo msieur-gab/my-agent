@@ -112,8 +112,8 @@
   }
 
   /* ---------- the model, in the browser ----------
-     Loaded once, after the page is interactive. The files are served by this site: nothing is fetched
-     from anywhere else, and nothing is written to storage beyond the browser's ordinary cache. */
+     Loaded the first time a question needs it, then kept in the browser's cache (Cache API), so a return
+     visit doesn't download it again. The files are served by this site: nothing is fetched from anywhere else. */
   function loader(base) {
     var ready = null;
     function load() {
@@ -122,7 +122,7 @@
         tf.env.allowRemoteModels = false;
         tf.env.allowLocalModels = true;
         tf.env.localModelPath = base + '/assets/models/';
-        tf.env.useBrowserCache = false;
+        tf.env.useBrowserCache = true;
         tf.env.backends.onnx.wasm.wasmPaths = base + '/assets/js/vendor/';
         tf.env.backends.onnx.wasm.numThreads = 1;
         return tf.pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2', { quantized: true });

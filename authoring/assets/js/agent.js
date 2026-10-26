@@ -17,12 +17,11 @@
   var brain = Respond.create(data);
   var lastSaid = ''; /* what the send form is filled with when the visitor accepts the invitation */
 
-  /* The bank: its entries and their vectors. Then the model, after the page has settled, so that a
-     question typed early can be matched by meaning; until then, by words. */
+  /* The bank: its entries and their vectors. The model is loaded only when the first question needs it
+     (one a phrasing doesn't answer word for word), so a visit that only taps costs nothing. */
   var bankReady = fetch(window.SITE_BASE + '/bank.json').then(function (r) { return r.json(); }).then(function (bank) {
     var model = bank.vectors && window.Bank ? Bank.loader(window.SITE_BASE) : null;
     brain.setBank(bank, function (text) { return model ? model.load().then(function (e) { return e(text); }) : Promise.reject(); });
-    if (model) setTimeout(function () { model.load(); }, 1200);
     return bank;
   }).catch(function (e) { console.warn('bank unavailable', e); });
 
