@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>thecu.be — landing page prototype</title>
+<!-- Prototype of the landing page, 26 October 2026. Not built by build.py: open this file directly.
+     Content and structure to react to; the real page is assembled from content/ as usual. -->
+<style>
+@font-face { font-family: "Instrument Sans"; src: url("../../src/assets/fonts/InstrumentSans-var.woff2") format("woff2"); font-weight: 400 700; font-stretch: 75% 100%; font-display: swap; }
+/* Layout: one column of reading (760px), evidence and work as horizontal decks on the phone and three columns on a desk;
+   the page scrolls over a fixed footer that holds the sources and the contact, revealed at the end. Light only, as the site. */
+:root {
+  --bg: #F7F7F5; --surface: #FFFFFF; --fg: #1B1C1D; --muted: #65686A; --faint: #DEDFDC; --soft: #EFEFEC; --link: #24547A;
+  --font: "Instrument Sans", "Helvetica Neue", Arial, sans-serif;
+  --gutter-l: max(16px, env(safe-area-inset-left, 0px)); --gutter-r: max(16px, env(safe-area-inset-right, 0px));
+  --foot-h: 320px;
+  color-scheme: light;
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 18px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+a { color: var(--link); text-underline-offset: 4px; text-decoration-thickness: 1px; }
+a:hover { color: var(--fg); }
+:focus-visible { outline: 2px solid var(--link); outline-offset: 3px; }
+h1, h2, h3, p, ol { margin: 0; }
+h1 { font-weight: 500; font-size: clamp(34px, 5.6vw, 60px); line-height: 1.06; letter-spacing: -0.025em; text-wrap: balance; }
+h2 { font-weight: 500; font-size: clamp(25px, 3.4vw, 36px); line-height: 1.15; letter-spacing: -0.02em; text-wrap: balance; }
+h3 { font-weight: 500; font-size: 21px; line-height: 1.3; text-wrap: balance; }
+.muted { color: var(--muted); }
+.small { font-size: 15px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* header */
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 6; display: flex; justify-content: space-between; align-items: center; gap: 12px 16px; flex-wrap: wrap; padding-block: 12px; padding-left: var(--gutter-l); padding-right: var(--gutter-r); background: color-mix(in srgb, var(--bg) 88%, transparent); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+.brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--fg); }
+.brand .name { display: flex; flex-direction: column; line-height: 1.1; }
+.brand .name b { font-weight: 600; font-size: 17px; letter-spacing: -0.01em; }
+.brand .name span { font-size: 13px; color: var(--muted); }
+.top nav { display: flex; gap: clamp(12px, 3vw, 28px); flex-wrap: wrap; }
+.top nav a { color: var(--muted); text-decoration: none; font-size: 15px; }
+.top nav a:hover { color: var(--fg); }
+
+/* the page scrolls over the footer */
+main { position: relative; z-index: 1; background: var(--bg); margin-bottom: var(--foot-h); box-shadow: 0 24px 48px -24px rgba(27, 28, 29, .18); }
+.col { max-width: 760px; margin: 0 auto; padding-left: var(--gutter-l); padding-right: var(--gutter-r); }
+.wide { max-width: 1080px; margin: 0 auto; padding-left: var(--gutter-l); padding-right: var(--gutter-r); }
+section { display: flex; flex-direction: column; gap: 24px; padding-block: 28px 64px; }
+.hero { gap: 24px; padding-block: clamp(44px, 9vh, 112px) 56px; }
+.lead { font-size: clamp(19px, 2vw, 22px); line-height: 1.45; max-width: 34em; }
+.btns { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 6px; }
+.btn, .ghost { display: inline-block; padding: 12px 20px; border-radius: 999px; text-decoration: none; font-weight: 500; font-size: 16px; font-family: inherit; cursor: pointer; }
+.btn { background: var(--fg); color: #FFFFFF; border: 1px solid var(--fg); }
+.btn:hover { background: #3A3C3E; border-color: #3A3C3E; color: #FFFFFF; }
+.ghost { background: var(--surface); color: var(--fg); border: 1px solid var(--faint); }
+.ghost:hover { border-color: var(--fg); }
+.chip { display: inline-block; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--faint); background: var(--surface); font-size: 15px; color: var(--fg); font-family: inherit; cursor: pointer; }
+.chip:hover { border-color: var(--fg); }
+
+/* decks: swiped on the phone, three columns on a desk */
+.deck-wrap { display: flex; flex-direction: column; gap: 12px; }
+.deck { display: flex; gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 6px; scrollbar-width: none; margin-left: calc(-1 * var(--gutter-l)); margin-right: calc(-1 * var(--gutter-r)); padding-left: var(--gutter-l); padding-right: var(--gutter-r); }
+.deck::-webkit-scrollbar { display: none; }
+.deck > * { flex: 0 0 min(82vw, 360px); scroll-snap-align: start; min-width: 0; }
+.deck-nav { display: flex; gap: 8px; justify-content: flex-end; }
+.deck-nav button { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--faint); background: var(--surface); color: var(--fg); font: inherit; font-size: 18px; cursor: pointer; }
+.deck-nav button:disabled { opacity: .35; cursor: default; }
+@media (min-width: 900px) {
+  .deck { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; overflow: visible; margin: 0; padding: 0; scroll-snap-type: none; }
+  .deck > * { flex: none; }
+  .deck-nav { display: none; }
+}
+
+.card { background: var(--surface); border: 1px solid var(--faint); border-radius: 16px; padding: 24px; display: flex; flex-direction: column; gap: 20px; }
+.num { font-weight: 500; font-size: clamp(38px, 5vw, 54px); line-height: 1; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+.sup { font-size: 12px; color: var(--muted); vertical-align: super; margin-left: 2px; }
+.stats { display: flex; flex-direction: column; gap: 16px; }
+.rule { height: 1px; background: var(--faint); }
+.beats { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 8px 16px; font-size: 16px; }
+.beats .k { color: var(--muted); }
+.rows { display: flex; flex-direction: column; }
+.row { display: flex; flex-direction: column; gap: 6px; padding-block: 20px; border-top: 1px solid var(--faint); }
+.row:last-child { border-bottom: 1px solid var(--faint); }
+.three { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+@media (max-width: 760px) { .three { grid-template-columns: minmax(0, 1fr); } }
+.box { background: var(--soft); border-radius: 16px; padding: 24px; display: flex; flex-direction: column; gap: 10px; }
+
+/* ask */
+.ask { display: flex; gap: 10px; flex-wrap: wrap; }
+.ask input { flex: 1 1 280px; min-width: 0; padding: 14px 18px; border-radius: 999px; border: 1px solid var(--faint); background: var(--surface); font: inherit; font-size: 17px; color: var(--fg); }
+.say { padding: 16px 20px; border-radius: 16px; background: var(--surface); border: 1px solid var(--faint); }
+.chips { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* the fixed footer: sources and contact, revealed by the end of the scroll */
+.foot { position: fixed; left: 0; right: 0; bottom: 0; z-index: 0; background: var(--soft); color: var(--fg); padding-top: 32px; padding-bottom: max(32px, env(safe-area-inset-bottom, 0px)); padding-left: var(--gutter-l); padding-right: var(--gutter-r); }
+.foot .in { max-width: 1080px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 32px; }
+@media (max-width: 760px) { .foot .in { grid-template-columns: minmax(0, 1fr); gap: 24px; } }
+.foot h3 { font-size: 14px; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+.foot ol { padding-left: 20px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: var(--muted); }
+.foot .contact { display: flex; flex-direction: column; gap: 8px; font-size: 15px; }
+.foot .addr { user-select: all; color: var(--fg); font-weight: 500; }
+.foot .legal { grid-column: 1 / -1; font-size: 13px; color: var(--muted); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; border-top: 1px solid var(--faint); padding-top: 16px; }
+
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+html { scroll-behavior: smooth; scroll-padding-top: 76px; }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <a class="brand" href="#top">
+    <svg width="34" height="34" viewBox="0 0 64 64" role="img" aria-label="thecu.be mark: a cube with a window into it">
+      <path d="M32 6 L56 18 L56 46 L32 58 L8 46 L8 18 Z" fill="#FFFFFF" stroke="#1B1C1D" stroke-width="2.5" stroke-linejoin="round"></path>
+      <path d="M8 18 L32 30 L56 18 M32 30 L32 58" fill="none" stroke="#1B1C1D" stroke-width="2.5" stroke-linejoin="round"></path>
+      <path d="M14 26 L26 32 L26 46 L14 40 Z" fill="#1B1C1D"></path>
+      <path d="M17 29.5 L23 32.5 L23 42 L17 39 Z" fill="#F7F7F5"></path>
+    </svg>
+    <span class="name"><b>thecu.be</b><span>unfolding perspective</span></span>
+  </a>
+  <nav aria-label="Main">
+    <a href="#evidence">Why</a>
+    <a href="#work">Work</a>
+    <a href="#offer">What you get</a>
+    <a href="#ask">Ask me</a>
+  </nav>
+</header>
+
+<main id="top">
+
+  <!-- 1 · the pain · 2 · reassurance and the proposal -->
+  <section class="col hero">
+    <p class="muted" style="font-size: 16px">For companies, startups and NGOs in Europe building digital or phygital products where trust is the vision, not a feature.</p>
+    <h1>People want what you're building. They don't trust it.</h1>
+    <p class="lead">They're right not to. Four in ten Europeans hold back from AI over their data, eight in ten want it kept in check, and most would pay more for a service they can rely on. That isn't a barrier to your product. It's the brief.</p>
+    <p class="lead" style="font-weight: 500">I put the human concern at the heart of the problem definition, design systems that cannot betray the people who use them, and build them to prove it.</p>
+    <div class="btns">
+      <a class="btn" href="#ask">Ask me about your case</a>
+      <a class="ghost" href="#work">See how it reads in the work</a>
+    </div>
+  </section>
+
+  <!-- 3 · the evidence -->
+  <section id="evidence" class="wide">
+    <div class="col" style="padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px">
+      <h2>Three things people are afraid of. Three things your product has to do.</h2>
+      <p class="muted">Not opinions: what Europeans told the European Commission in March 2026, and what buyers told Cisco and McKinsey.</p>
+    </div>
+    <div class="deck-wrap">
+      <div class="deck" data-deck>
+        <article class="card">
+          <h3>"Where does my data go?"</h3>
+          <div class="stats">
+            <div><p class="num">92%<span class="sup">1</span></p><p class="small muted">of Europeans put protecting privacy and security online first among the EU's digital goals</p></div>
+            <div><p class="num">75%<span class="sup">2</span></p><p class="small muted">won't buy from an organisation they don't trust with their data</p></div>
+            <div><p class="num">58%<span class="sup">1</span></p><p class="small muted">would switch to a European provider even at a slightly higher cost</p></div>
+          </div>
+          <div class="rule"></div>
+          <p style="font-size: 16px"><b style="font-weight: 500">So the product must</b> keep the data where the person is, and show the risk before legal has to say no.</p>
+          <p class="small"><a href="#work">AutoFlow, Pebbble →</a></p>
+        </article>
+        <article class="card">
+          <h3>"Can I rely on what the machine says?"</h3>
+          <div class="stats">
+            <div><p class="num">36%<span class="sup">1</span></p><p class="small muted">are held back from AI by wrong or inaccurate answers; 39% by their data</p></div>
+            <div><p class="num">74%<span class="sup">3</span></p><p class="small muted">of organisations rank inaccuracy as their most relevant AI risk</p></div>
+            <div><p class="num">80%<span class="sup">1</span></p><p class="small muted">want AI carefully regulated for safety, even if developers face constraints. 15% don't.</p></div>
+          </div>
+          <div class="rule"></div>
+          <p style="font-size: 16px"><b style="font-weight: 500">So the product must</b> translate, not invent; say "I don't know" when it doesn't; and skip the large model when logic will do.</p>
+          <p class="small"><a href="#work">Senz, Dowgo →</a></p>
+        </article>
+        <article class="card">
+          <h3>"What is this doing to my children?"</h3>
+          <div class="stats">
+            <div><p class="num">92%<span class="sup">1</span></p><p class="small muted">want children and young people better protected online; 61% call it a very high priority</p></div>
+            <div><p class="num">+8 pts<span class="sup">1</span></p><p class="small muted">in two years: 41% now say insufficient protection of minors affects them personally</p></div>
+            <div><p class="num">€630 M<span class="sup">4</span></p><p class="small muted">of screen-free audio boxes sold in 2025, up 31%. Parents already pay for less screen.</p></div>
+          </div>
+          <div class="rule"></div>
+          <p style="font-size: 16px"><b style="font-weight: 500">So the product must</b> send children outside and parents off their phones, and have nothing to track.</p>
+          <p class="small"><a href="#work">Vrooom, Pebbble →</a></p>
+        </article>
+      </div>
+      <div class="deck-nav" aria-hidden="true"><button type="button" data-prev aria-label="Previous">←</button><button type="button" data-next aria-label="Next">→</button></div>
+    </div>
+  </section>
+
+  <!-- 4 · where it usually starts -->
+  <section class="col">
+    <h2>Where this usually starts</h2>
+    <div class="rows">
+      <div class="row">
+        <h3>An AI pilot that has to survive legal, and your customers.</h3>
+        <p class="muted" style="font-size: 16px">It worked in the demo. Now it needs to pass the AI Act, the DPO and the person on the other side of the screen. Two-thirds of companies say security and risk, not technology, is what stops them scaling AI.<span class="sup">3</span></p>
+      </div>
+      <div class="row">
+        <h3>A product that handles personal data and has to be trusted with it.</h3>
+        <p class="muted" style="font-size: 16px">Compliance has an answer; your users want proof. The product can be the proof: a flow that never leaves the device is easier to explain than a policy.</p>
+      </div>
+      <div class="row">
+        <h3>A product for children, or families, that has to show it isn't taking anything.</h3>
+        <p class="muted" style="font-size: 16px">The market is growing and the scrutiny with it. An object that works without an account, an app that needs fifteen seconds of screen: that's a business model, not a constraint.</p>
+      </div>
+    </div>
+    <p class="muted small">Not on the list: legal advice, security audits, logos. I design how the product behaves and build it. Legal stays legal.</p>
+  </section>
+
+  <!-- 5 · the work, in four beats -->
+  <section id="work" class="wide">
+    <div class="col" style="padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px">
+      <h2>How it reads in the work</h2>
+      <p class="muted">Every case in the same four beats: the fear, what the system must never do, what I built, what it refused.</p>
+    </div>
+    <div class="deck-wrap">
+      <div class="deck" data-deck>
+        <article class="card">
+          <div><p class="muted small">Allianz · Kaiser X Labs · 2018–21</p><h3>Senz</h3></div>
+          <div class="beats">
+            <span class="k">The fear</span><span>Experts afraid of being misread by a machine, and of needing permission for every test.</span>
+            <span class="k">Must never</span><span>Invent. Pretend to understand.</span>
+            <span class="k">Built</span><span>A vision model that reads a paper sketch into the company's own design system and deploys it, on the company's own servers.</span>
+            <span class="k">Refused</span><span>To guess. Below its confidence, it said it didn't recognise the shape.</span>
+          </div>
+          <p class="small"><a href="#work">Read the full story →</a></p>
+        </article>
+        <article class="card">
+          <div><p class="muted small">Dowgo · two weeks · 2024</p><h3>Dowgo</h3></div>
+          <div class="beats">
+            <span class="k">The fear</span><span>Founders raising money, afraid of sensitive files leaving the room and of a process nobody can follow.</span>
+            <span class="k">Must never</span><span>Send a document to a third party.</span>
+            <span class="k">Built</span><span>A data room that says what's missing and who has to act, in the client's production code.</span>
+            <span class="k">Refused</span><span>The LLM the brief asked for. Pattern matching and a small logic layer did the same job, on the device.</span>
+          </div>
+          <p class="small"><a href="#work">Read the full story →</a></p>
+        </article>
+        <article class="card">
+          <div><p class="muted small">Self-initiated · 2024–</p><h3>Pebbble</h3></div>
+          <div class="beats">
+            <span class="k">The fear</span><span>A parent far from a child, and a child who may be watched.</span>
+            <span class="k">Must never</span><span>Hold a database anyone could subpoena. Need an account.</span>
+            <span class="k">Built</span><span>A hand-shaped stone with a sealed chip; tap it to a phone, hear the voice. The stone is the key.</span>
+            <span class="k">Refused</span><span>A server, an app store listing, a password. Private by architecture, not by policy.</span>
+          </div>
+          <p class="small"><a href="#work">Read the full story →</a></p>
+        </article>
+      </div>
+      <div class="deck-nav" aria-hidden="true"><button type="button" data-prev aria-label="Previous">←</button><button type="button" data-next aria-label="Next">→</button></div>
+    </div>
+    <p class="small"><a href="#work">Everything, as a list →</a></p>
+  </section>
+
+  <!-- 6 · what you get -->
+  <section id="offer" class="col">
+    <h2>What changes for you</h2>
+    <div class="rows">
+      <div class="row">
+        <h3>Legal says yes sooner, because there is something to review.</h3>
+        <p class="muted" style="font-size: 16px">A product that proves its behaviour gets reviewed on what it does, not on a deck of promises. Dowgo went from first conversation to working code in the client's own stack in two weeks, and into production.</p>
+      </div>
+      <div class="row">
+        <h3>Trust becomes a line you can print on the box.</h3>
+        <p class="muted" style="font-size: 16px">"Nothing leaves your device." "No account." "It says when it doesn't know." Claims you can make because the architecture makes them true, to the 58% who will pay more for exactly that.<span class="sup">1</span></p>
+      </div>
+      <div class="row">
+        <h3>Fewer parts: less to pay for, less to defend, less to explain.</h3>
+        <p class="muted" style="font-size: 16px">No large model where logic will do, no server where the device will do, no account where an object will do. Dowgo's document sorting runs in milliseconds for nothing; Pebbble has no database for anyone to breach or subpoena.</p>
+      </div>
+      <div class="row">
+        <h3>Your customers find out, without an ad.</h3>
+        <p class="muted" style="font-size: 16px">A product people trust gets handed around. Vrooom's growth channel is a parent printing a badge; this page's is a question answered honestly.</p>
+      </div>
+      <div class="row">
+        <h3>Your team can carry it on without me.</h3>
+        <p class="muted" style="font-size: 16px">Every decision written down with its reason, so the next feature and the next audit don't need me in the room.</p>
+      </div>
+    </div>
+    <div class="box">
+      <p style="font-weight: 500">Start with two weeks</p>
+      <p style="font-size: 16px">A week of listening to how your people and your users actually work, to find the question behind the brief. Then a running proof of the answer, and the reasoning on paper. You end with something to show legal, the board and a customer, and you know whether to go on.</p>
+      <div class="btns"><a class="btn" href="#ask">Tell me what you're facing</a></div>
+    </div>
+    <div class="box" style="background: transparent; border: 1px solid var(--faint)">
+      <p style="font-weight: 500">Why not a law firm, an agency or a dev shop</p>
+      <p style="font-size: 16px">A law firm tells you what you can't do. A dev shop builds what you asked for. An agency makes it look trustworthy. I make the product itself the proof, and I've made these calls since 2018, when Senz ran its model on-premise because no cloud could be trusted with it. This page runs on the same rule: no language model writes a word here.</p>
+    </div>
+  </section>
+
+  <!-- 7 · who runs the cube -->
+  <section class="col" style="gap: 14px">
+    <h2>Who runs the cube</h2>
+    <p>Gabriel Baude. Engineer and industrial designer by training; twenty years going beneath the interface to where technology meets the system, at Orange, Huawei, Allianz, and now on my own in Munich.</p>
+    <p class="muted small">[To write in the follow-up: proofs, credentials, the five-dimension perspective.]</p>
+  </section>
+
+  <!-- 8 · ask me -->
+  <section id="ask" class="col" style="padding-bottom: 96px">
+    <h2>Ask me about your case</h2>
+    <p>Describe what you're stuck on. The page matches it to the closest thing I've done and answers in my words. When nothing fits, it says so and lets you send me the question.</p>
+    <form class="ask" id="askform">
+      <label for="q" class="sr">Your question</label>
+      <input id="q" name="q" type="text" autocomplete="off" placeholder="e.g. Our AI pilot worked in the demo. Why won't legal let it ship?">
+      <button type="submit" class="btn">Ask</button>
+    </form>
+    <div class="chips">
+      <button type="button" class="chip" data-q="Our AI pilot won't pass legal">Our AI pilot won't pass legal</button>
+      <button type="button" class="chip" data-q="Where does our personal data go?">Where does our personal data go?</button>
+      <button type="button" class="chip" data-q="Can a toy be connected without being addictive?">Can a toy be connected without being addictive?</button>
+    </div>
+    <div class="say" id="say" hidden></div>
+    <p class="muted small">No language model is writing this. A small model in your browser compares your question with the ones I've written; nothing about you is stored or sent anywhere.</p>
+  </section>
+
+</main>
+
+<footer class="foot" id="foot">
+  <div class="in">
+    <div style="display: flex; flex-direction: column; gap: 10px">
+      <h3>Sources</h3>
+      <ol>
+        <li>European Commission, Special Eurobarometer 572 "Digital Decade", 26,494 interviews, February–March 2026.</li>
+        <li>Cisco, Consumer Privacy Survey 2024, 2,600 adults in 12 countries.</li>
+        <li>McKinsey, State of AI trust in 2026, about 500 organisations.</li>
+        <li>tonies SE, full-year 2025 results: revenue €630 M, +31%.</li>
+      </ol>
+    </div>
+    <div class="contact">
+      <h3>Contact</h3>
+      <span class="addr">[email]</span>
+      <span>Munich, working across Europe</span>
+      <span><a href="#">LinkedIn</a> · <a href="#">How this site works</a> · <a href="#">Notes</a></span>
+    </div>
+    <div class="legal"><span>© 2026 thecu.be · Gabriel Baude</span><span>No cookies. Nothing stored about you.</span></div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  /* The footer is fixed behind the page; the page leaves room for it so the scroll reveals it at the end. */
+  var foot = document.getElementById('foot');
+  function room() { document.documentElement.style.setProperty('--foot-h', foot.offsetHeight + 'px'); }
+  room();
+  if (window.ResizeObserver) new ResizeObserver(room).observe(foot);
+  window.addEventListener('resize', room);
+
+  /* Decks: swipe on the phone, arrows when there is more than fits. */
+  document.querySelectorAll('[data-deck]').forEach(function (row) {
+    var nav = row.parentNode.querySelector('.deck-nav');
+    if (!nav) return;
+    var prev = nav.querySelector('[data-prev]'), next = nav.querySelector('[data-next]');
+    function step() { return row.firstElementChild.offsetWidth + 16; }
+    prev.addEventListener('click', function () { row.scrollBy({ left: -step(), behavior: 'smooth' }); });
+    next.addEventListener('click', function () { row.scrollBy({ left: step(), behavior: 'smooth' }); });
+    function update() {
+      var more = row.scrollWidth - row.clientWidth;
+      prev.disabled = row.scrollLeft < 8;
+      next.disabled = row.scrollLeft > more - 8;
+    }
+    row.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    update();
+  });
+
+  /* The ask box is a stand-in: the real agent lives on the site. */
+  var form = document.getElementById('askform'), input = document.getElementById('q'), say = document.getElementById('say');
+  var canned = {
+    'our ai pilot': 'This is the closest I have. At Dowgo the brief asked for an LLM; the AI Act gave me a reason to say no, and pattern matching with a small logic layer did the job with no document leaving the device.',
+    'personal data': 'Draw it. AutoFlow turns a hand-drawn flow into a Sankey where the thickness of a band is how much personal data moves and its colour is how exposed it is.',
+    'toy': 'Vrooom refuses the mechanics: no points, no streaks, no leaderboards. Fifteen seconds of screen time per session, held by the parent.'
+  };
+  function answer(text) {
+    var t = text.toLowerCase(), line = null;
+    Object.keys(canned).forEach(function (k) { if (!line && t.indexOf(k) !== -1) line = canned[k]; });
+    say.textContent = line || 'Prototype: in the real page, a small model in your browser matches this to the question bank and answers in my words, or says it has nothing and offers the form.';
+    say.hidden = false;
+  }
+  form.addEventListener('submit', function (e) { e.preventDefault(); if (input.value.trim()) answer(input.value.trim()); });
+  document.querySelectorAll('.chip[data-q]').forEach(function (c) { c.addEventListener('click', function () { input.value = c.dataset.q; answer(c.dataset.q); }); });
+})();
+</script>
+</body>
+</html>

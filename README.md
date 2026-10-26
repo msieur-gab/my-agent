@@ -49,6 +49,7 @@ build/embed.py           the bank's vectors, with the same model file the browse
 tests/eval.py            the measurements (held-out.json, bank-eval.json) → tests/eval-results.md
 tests/talk.mjs           a whole conversation through respond.js (Action only)
 docs/                    site foundation, interaction model, the questions log, the matcher evaluation
+docs/prototype/          landing.html: the thecu.be landing page prototype (open the file directly)
 .github/workflows/       build and deploy to GitHub Pages
 ```
 
