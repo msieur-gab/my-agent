@@ -2,10 +2,16 @@ name: Publish site
 
 # Builds the site and puts the result on the gh-pages branch.
 # GitHub Pages serves that branch (Settings → Pages → Deploy from a branch → gh-pages / root).
+#
+# This is the `authoring` branch's version: it publishes under /authoring/ on gh-pages, next to the
+# site built from main, so the new version can be tried at
+#     https://msieur-gab.github.io/my-agent/authoring/
+# Note: main's workflow rebuilds gh-pages from scratch, so a push to main removes /authoring/ until
+# this branch is pushed (or run by hand) again. Merge to main to make this the site.
 
 on:
   push:
-    branches: [main]
+    branches: [authoring]
   workflow_dispatch:
 
 permissions:
@@ -23,22 +29,29 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Build the site
-        env:
-          BASE_PATH: /my-agent
-          BASE_URL: https://msieur-gab.github.io/my-agent
-        run: python3 build/build.py
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: Check matching and redaction
-        run: node tests/check.js
-      - name: Push the built site to gh-pages
+          cache: npm
+      - name: Build the site
+        env:
+          BASE_PATH: /my-agent/authoring
+          BASE_URL: https://msieur-gab.github.io/my-agent/authoring
+        run: python3 build/build.py
+      - name: Embed the question bank
+        run: npm ci && node build/embed.mjs
+      - name: Check matching, redaction and the conversation
+        run: node tests/check.js && node tests/talk.mjs
+      - name: Put the built site under /authoring/ on gh-pages
         run: |
-          cd public
-          git init -q -b gh-pages
+          REMOTE="https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git"
+          git clone -q --depth 1 --branch gh-pages "$REMOTE" deploy || { mkdir deploy && git -C deploy init -q -b gh-pages; }
+          rm -rf deploy/authoring
+          cp -r public deploy/authoring
+          touch deploy/.nojekyll
+          cd deploy
           git config user.name "github-actions"
           git config user.email "github-actions@users.noreply.github.com"
           git add -A
-          git commit -q -m "Site built from ${GITHUB_SHA::7}"
-          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git" gh-pages
+          git commit -q -m "Authoring version built from ${GITHUB_SHA::7}" || echo "nothing changed"
+          git push -q "$REMOTE" gh-pages

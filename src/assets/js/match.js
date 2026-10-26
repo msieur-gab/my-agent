@@ -224,7 +224,7 @@
     return null;
   }
 
-  var api = { wantsList: wantsList, command: command, fold: fold, prepare: prepare, search: search, verdict: verdict, terms: terms, intent: intent, STRONG: STRONG, PARTIAL: PARTIAL };
+  var api = { wantsList: wantsList, command: command, fold: fold, prepare: prepare, search: search, verdict: verdict, terms: terms, nearest: nearest, intent: intent, STRONG: STRONG, PARTIAL: PARTIAL };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.Match = api;
 })(this);

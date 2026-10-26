@@ -1,0 +1,373 @@
+{
+  "note": "Held-out questions for the bank (content/bank.md), written 26 October 2026 in a different register from the bank: casual, long, with jargon, with typos. None of these sentences is in the bank. `entry` is the canonical question of the entry that should answer; `leads` is where it should go. Written by Claude, who also drafted the bank: correct them freely.",
+  "answerable": [
+    {
+      "q": "my product owners have ideas all year but every single one dies in a budget committee, what did you do about that",
+      "entry": "How can my team test an idea before we commit a budget?",
+      "leads": "senz"
+    },
+    {
+      "q": "we spend 3 months in workshops and still no prototype",
+      "entry": "How do we stop debating ideas and start learning from them?",
+      "leads": "senz"
+    },
+    {
+      "q": "can an underwriter with no coding skills make a clickable prototype",
+      "entry": "Can people without a technical background build a prototype themselves?",
+      "leads": "senz"
+    },
+    {
+      "q": "people here are scared to try things because a failed pilot looks bad",
+      "entry": "How do we make failing cheap enough that people dare to try?",
+      "leads": "senz"
+    },
+    {
+      "q": "my CEO is tired of powerpoints and wants to see something real",
+      "entry": "The board wants proof, not another deck. Where do we start?",
+      "leads": "senz"
+    },
+    {
+      "q": "our corporate lab takes a year to ship anything",
+      "entry": "Our innovation lab is too slow. How do we speed it up?",
+      "leads": "senz"
+    },
+    {
+      "q": "half the company wants change, the other half wants different change",
+      "entry": "Everyone agrees something must change. Nobody agrees on what.",
+      "leads": "senz"
+    },
+    {
+      "q": "we built a design system and the product teams ignore it",
+      "entry": "How do we make a design system adoptable?",
+      "leads": "senz"
+    },
+    {
+      "q": "what happens in your tools when the model isn't confident",
+      "entry": "What should an AI do when it is not sure?",
+      "leads": "senz"
+    },
+    {
+      "q": "is GPT-4 overkill for sorting invoices",
+      "entry": "Do we even need a large language model for this?",
+      "leads": "dowgo"
+    },
+    {
+      "q": "we were thinking of using an LLM to tag our contracts automatically",
+      "entry": "Should we add AI to sort our documents?",
+      "leads": "dowgo"
+    },
+    {
+      "q": "our lawyers worry about uploading client files to openai",
+      "entry": "Is it safe to send sensitive documents to an AI model?",
+      "leads": "dowgo"
+    },
+    {
+      "q": "on prem vs cloud for machine learning in a bank",
+      "entry": "Should the AI run on our own servers?",
+      "leads": "senz"
+    },
+    {
+      "q": "we want AI assistance but the final call must stay with our people",
+      "entry": "How do we keep a human in control of the decision?",
+      "leads": "senz"
+    },
+    {
+      "q": "the vendor's risk rating is a black box, how do we audit it",
+      "entry": "How can we trust a risk score?",
+      "leads": "autoflow"
+    },
+    {
+      "q": "honestly nobody here can tell me where customer records travel after signup",
+      "entry": "Where does our personal data actually go?",
+      "leads": "autoflow"
+    },
+    {
+      "q": "how do I get my sales team to understand data protection rules",
+      "entry": "How do we make GDPR understandable to people outside legal?",
+      "leads": "autoflow"
+    },
+    {
+      "q": "can we feed client data into a model without breaking european privacy law",
+      "entry": "Can we use our customer data with AI and stay GDPR-compliant?",
+      "leads": "autoflow"
+    },
+    {
+      "q": "every feature we propose gets killed by the privacy team",
+      "entry": "Compliance keeps saying no. What would a yes look like?",
+      "leads": "autoflow"
+    },
+    {
+      "q": "we fill in a ROPA excel every year and nobody looks at it",
+      "entry": "Is there an alternative to compliance spreadsheets?",
+      "leads": "autoflow"
+    },
+    {
+      "q": "HR needs to send a staff list to a partner, how do we strip the personal bits first",
+      "entry": "How do we anonymise data before sharing it?",
+      "leads": "autoflow"
+    },
+    {
+      "q": "our DPO software is hosted by an american company, should we worry",
+      "entry": "Our compliance tool is hosted in the US. Is that a problem?",
+      "leads": "autoflow"
+    },
+    {
+      "q": "could the whole thing run offline on the laptop instead of a backend",
+      "entry": "Can the data stay on the user's device?",
+      "leads": "autoflow"
+    },
+    {
+      "q": "we want to skip the signup step completely, is that realistic",
+      "entry": "Can a product work without an account?",
+      "leads": "pebbble"
+    },
+    {
+      "q": "if your startup goes bust do the recordings vanish",
+      "entry": "What happens to my data if the company disappears?",
+      "leads": "pebbble"
+    },
+    {
+      "q": "can a kids product be built with no data collection at all",
+      "entry": "Can a children's product work without tracking children?",
+      "leads": "vrooom"
+    },
+    {
+      "q": "I'm deployed overseas and my 4 year old is forgetting my voice",
+      "entry": "How can a child keep a parent's voice when they live apart?",
+      "leads": "pebbble"
+    },
+    {
+      "q": "divorced, kids 800km away, video calls aren't working for the little one",
+      "entry": "How do I stay present for a child who lives far away?",
+      "leads": "pebbble"
+    },
+    {
+      "q": "I want to record something now that my daughter opens when she turns 18",
+      "entry": "How do I leave a message my child can only open years from now?",
+      "leads": "pebbble"
+    },
+    {
+      "q": "wouldn't a video call be better than just audio for a toddler",
+      "entry": "Why voice instead of text or video?",
+      "leads": "pebbble"
+    },
+    {
+      "q": "what if the other parent inspects the phone",
+      "entry": "What if the device the child uses is monitored?",
+      "leads": "pebbble"
+    },
+    {
+      "q": "how do you build something a 3 year old can use alone",
+      "entry": "How do you design for a child who cannot read?",
+      "leads": "pebbble"
+    },
+    {
+      "q": "can you put electronics in something that looks completely ordinary",
+      "entry": "Can technology hide inside an ordinary object?",
+      "leads": "pebbble"
+    },
+    {
+      "q": "is there a way for my son to play with tech without staring at a tablet",
+      "entry": "Can digital play happen without a screen?",
+      "leads": "vrooom"
+    },
+    {
+      "q": "connected toys all seem designed to keep kids hooked, is there another way",
+      "entry": "Can a toy be connected without being addictive?",
+      "leads": "vrooom"
+    },
+    {
+      "q": "we want a product for families that doesn't add screentime",
+      "entry": "How can kids use technology without more screen time?",
+      "leads": "vrooom"
+    },
+    {
+      "q": "can we launch a product with zero marketing spend",
+      "entry": "How do people discover a product without ads?",
+      "leads": "vrooom"
+    },
+    {
+      "q": "how do you make money if you refuse ads and tracking",
+      "entry": "How does the business make money without ads?",
+      "leads": "vrooom"
+    },
+    {
+      "q": "series A next month and our dataroom is chaos",
+      "entry": "We're raising. How do we get due diligence under control?",
+      "leads": "dowgo"
+    },
+    {
+      "q": "our internal process has so many steps that people give up",
+      "entry": "Our process has grown too complex. Where does the friction come from?",
+      "leads": "dowgo"
+    },
+    {
+      "q": "we can't afford to retrain 200 users on a new UI",
+      "entry": "How do we improve a tool without making people learn something new?",
+      "leads": "dowgo"
+    },
+    {
+      "q": "management wants a dashboard with all the KPIs, is that the right move",
+      "entry": "Why not just build a dashboard?",
+      "leads": "dowgo"
+    },
+    {
+      "q": "what could you realistically do for us in a fortnight",
+      "entry": "What can a consultant deliver in two weeks?",
+      "leads": "dowgo"
+    },
+    {
+      "q": "you've never worked in logistics, why would you understand our users",
+      "entry": "How do you work in a domain you do not know?",
+      "leads": "dowgo"
+    },
+    {
+      "q": "I need to pitch this to non technical executives in simple terms",
+      "entry": "How do I explain this to my board in plain words?",
+      "leads": "autoflow"
+    },
+    {
+      "q": "whats your city",
+      "entry": "Where are you based?",
+      "leads": ""
+    },
+    {
+      "q": "parlez vous francais",
+      "entry": "Which languages do you speak?",
+      "leads": ""
+    },
+    {
+      "q": "are you open to a full time role",
+      "entry": "Do you work freelance or would you join a team?",
+      "leads": "contact"
+    },
+    {
+      "q": "ballpark price for a two month engagement",
+      "entry": "What is your day rate?",
+      "leads": "invite"
+    },
+    {
+      "q": "how do you usually kick things off with a new client",
+      "entry": "What is your process?",
+      "leads": "dowgo"
+    },
+    {
+      "q": "do you hand over figma files or actual code",
+      "entry": "What do you deliver at the end?",
+      "leads": "dowgo"
+    },
+    {
+      "q": "do you need devs or can you implement it yourself",
+      "entry": "Do you write code yourself?",
+      "leads": "autoflow"
+    },
+    {
+      "q": "we need a new logo and visual identity",
+      "entry": "Do you do logo design?",
+      "leads": ""
+    },
+    {
+      "q": "why you and not an agency",
+      "entry": "What makes you different?",
+      "leads": "all"
+    },
+    {
+      "q": "which of your projects is the strongest",
+      "entry": "What is your best project?",
+      "leads": "senz"
+    },
+    {
+      "q": "hi there",
+      "entry": "Hello",
+      "leads": ""
+    },
+    {
+      "q": "thx!",
+      "entry": "Thanks",
+      "leads": ""
+    },
+    {
+      "q": "is this a real person or a chatbot",
+      "entry": "Are you an AI?",
+      "leads": "page:how-this-site-works"
+    },
+    {
+      "q": "I'd like to book a call",
+      "entry": "How can I contact you?",
+      "leads": "contact"
+    },
+    {
+      "q": "list all your projects",
+      "entry": "Show me all your work",
+      "leads": "all"
+    },
+    {
+      "q": "how can my team test an idea befor we comit a budjet",
+      "entry": "How can my team test an idea before we commit a budget?",
+      "leads": "senz"
+    },
+    {
+      "q": "can we use AI and still pass GDRP",
+      "entry": "Can we use our customer data with AI and stay GDPR-compliant?",
+      "leads": "autoflow"
+    },
+    {
+      "q": "can a toy be conected without being adictive",
+      "entry": "Can a toy be connected without being addictive?",
+      "leads": "vrooom"
+    },
+    {
+      "q": "I need help",
+      "entry": "What can I ask?",
+      "leads": ""
+    },
+    {
+      "q": "we need a new brand identity",
+      "entry": "What do you not do?",
+      "leads": ""
+    },
+    {
+      "q": "do you do social media marketing",
+      "entry": "What do you not do?",
+      "leads": ""
+    },
+    {
+      "q": "we need help with our SEO",
+      "entry": "What do you not do?",
+      "leads": ""
+    }
+  ],
+  "none": [
+    "how do we migrate our SAP system",
+    "can you build our mobile app",
+    "how do I set up a Salesforce CRM",
+    "how should we price our SaaS product",
+    "can you run our Scrum process",
+    "we need a pitch deck",
+    "how do I train for a marathon",
+    "a recipe for lasagne",
+    "what is the capital of Australia",
+    "my printer does not work",
+    "what is the price of bitcoin",
+    "write me a poem about autumn",
+    "how to grow tomatoes",
+    "best laptop for gaming",
+    "symptoms of the flu",
+    "cheap flights to Paris",
+    "translate hello into Spanish",
+    "when was Napoleon born",
+    "how many employees does Dowgo have",
+    "who invested in Dowgo",
+    "how much did it cost to build Senz",
+    "what is the price of a Vrooom car",
+    "when will AutoFlow be released",
+    "how many Pebbble stones have been sold",
+    "which companies use AutoFlow today",
+    "we have a problem with our app",
+    "what do you think about work",
+    "our website is slow",
+    "how do we hire developers faster",
+    "which design system should we buy",
+    "can you write our terms of service"
+  ]
+}

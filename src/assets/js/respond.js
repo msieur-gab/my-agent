@@ -1,6 +1,7 @@
 /* What to reply. Takes what the visitor said or tapped, and what this visit has already shown,
    and returns a reply as plain data. No page code, no generated text: every sentence comes
-   from content/. Works in the browser (window.Respond) and in Node (tests).
+   from content/, and a typed question is answered from content/bank.md through bank.js.
+   Works in the browser (window.Respond) and in Node (tests).
 
    There are four templates. They all return the same shape, and chat.js shows any of them
    the same way:
@@ -16,18 +17,23 @@
 (function (root) {
   var node = typeof module !== 'undefined' && module.exports;
   var Match = node ? require('./match.js') : root.Match;
+  var Bank = node ? require('./bank.js') : root.Bank;
   var CLOSE = 0.8; /* a second project within 80% of the best one is a close call */
 
-  function create(data) {
+  /* data: { site, pieces }. bank (optional): public/bank.json. embed (optional): text → Promise<vector>,
+     the model in the browser; without it the bank is searched by words only, then the pieces as before. */
+  function create(data, bank, embed) {
     var site = data.site, voice = site.voice, pieces = data.pieces;
     var base = site.basePath || '';
     var index = Match.prepare(pieces);
     var bySlug = {};
     pieces.forEach(function (p) { bySlug[p.slug] = p; });
+    var bankIndex = bank ? Bank.prepare(bank) : null;
+    function setBank(b, e) { bankIndex = Bank.prepare(b); embed = e; }
 
     /* Memory, for this visit only: what was shown, what else was close, which project the talk is on. */
-    var seen, pool, focus, lastNone = -1;
-    function reset() { seen = {}; pool = []; focus = null; }
+    var seen, said, pool, focus, lastNone = -1;
+    function reset() { seen = {}; said = {}; pool = []; focus = null; }
     reset();
 
     function unseen(list) { return list.filter(function (p) { return p && !seen[p.slug]; }); }
@@ -56,7 +62,7 @@
 
     /* A written line for things said to a person: hello, who are you, how does this work. */
     function talk(line, extra) {
-      var reply = { template: 'talk', says: [line] };
+      var reply = { template: 'talk', says: [].concat(line) };
       Object.keys(extra || {}).forEach(function (k) { reply[k] = extra[k]; });
       return reply;
     }
@@ -127,8 +133,9 @@
 
     /* ---------- what the visitor can do ---------- */
 
-    /* They typed something. In order: a project asked for by name, a topic by name,
-       talk, then a search through the work. */
+    /* They typed something. In order: a project asked for by name, a topic by name, then the bank:
+       by words when a phrasing is nearly the same sentence, by meaning otherwise (that one takes a
+       moment, so a Promise is returned). Without the bank, or when it has nothing: the pieces, as before. */
     function ask(text) {
       var cmd = Match.command(text, pieces, focus);
       if (cmd) return cmd.action === 'open' ? open(cmd.slug) : pick(cmd.slug);
@@ -136,6 +143,76 @@
       var topic = site.themes.filter(function (t) { return Match.fold(t.label) === Match.fold(text); })[0];
       if (topic) return theme(topic.id);
 
+      if (bankIndex) {
+        var vw = Bank.verdict(Bank.words(bankIndex, text), 'words');
+        if (vw.kind !== 'none') return fromBank(vw, text);
+        if (bankIndex.embedded && embed) {
+          return embed(text).then(function (vec) {
+            var vm = Bank.verdict(Bank.meaning(bankIndex, vec), 'meaning');
+            return vm.kind === 'none' ? nothing(text) : fromBank(vm, text);
+          }, function () { return nothing(text); });
+        }
+        return nothing(text);
+      }
+      return search(text);
+    }
+
+    /* The bank has no answer. Only the list and the talk patterns are still tried: the pieces' keywords
+       are not, so that the bank stays the one place that decides what a question gets. */
+    function nothing(text) {
+      var kind = Match.intent(text);
+      if (kind) return small(kind);
+      return Match.wantsList(text) ? everything() : none(text);
+    }
+
+    /* What the bank found: an entry (said in full, or as the closest thing), or a close call between a few. */
+    function fromBank(v, text) {
+      var top = v.results[0];
+      if (v.kind === 'close') {
+        var list = unseen(v.close.map(function (r) { return bySlug[r.entry.leads]; }));
+        if (list.length > 1) return choice(voice.askBack, list);
+      }
+      return entry(top.entry, text, v.kind === 'partial', top.text);
+    }
+
+    /* An entry of the bank, said. `read` is the phrasing that matched: when it isn't what the visitor
+       typed, the reply shows how the question was understood. */
+    function entry(e, text, partial, read) {
+      var why = read && Match.fold(read) !== Match.fold(text) ? voice.read.replace('{q}', e.q) : null;
+      var lead = partial ? site.partialIntro : null;
+      var lines = [lead].concat(e.say).filter(Boolean);
+      var to = e.leads || '';
+      var p = bySlug[to];
+      if (p) {
+        /* The same entry again: the piece is still the answer. Another entry leading to a piece already shown
+           is still said, in full: the reply is new even if the story isn't. */
+        if (said[e.id] && seen[p.slug] && !partial) return talk(voice.seen.replace('{title}', p.title), { why: why, link: storyLink(p), next: alsoOn(e), invite: true });
+        said[e.id] = true;
+        seen[p.slug] = true;
+        focus = p.slug;
+        pool = related(p, []);
+        return { template: 'project', says: lines, why: why, link: storyLink(p), next: alsoOn(e), invite: true };
+      }
+      said[e.id] = true;
+      if (to === 'invite') return { template: 'none', says: lines, why: why, form: { text: text }, next: topics(voice.themesAgain) };
+      if (to === 'contact') return talk(lines, { why: why, form: { text: '' } });
+      if (to === 'all') return choice(lines[0], pieces.filter(function (x) { return x.type === 'work'; }), { text: voice.allLink, href: base + '/work/' });
+      if (to === 'more') return small('more');
+      if (to.indexOf('page:') === 0) return talk(lines, { why: why, link: { text: voice.howLink, href: base + '/' + to.slice(5) + '/' }, next: topics() });
+      var next = alsoOn(e);
+      return talk(lines, { why: why, next: next.items.length ? next : topics() });
+    }
+
+    /* The other questions of the same section, not yet said, the way the bank writes them. */
+    function alsoOn(e) {
+      var items = bankIndex.entries.filter(function (o) {
+        return o !== e && o.section === e.section && !said[o.id] && o.theme !== 'talk';
+      }).slice(0, 3).map(function (o) { return { text: o.q, entry: o.id, said: true }; });
+      return { label: voice.also, items: items };
+    }
+
+    /* The pieces themselves, by keywords and listed questions: the matcher the site had before the bank. */
+    function search(text) {
       var kind = Match.intent(text);
       if (kind) return small(kind);
 
@@ -200,7 +277,13 @@
       return choice(voice.all, work, { text: voice.allLink, href: base + '/work/' });
     }
 
-    return { ask: ask, pick: pick, theme: theme, reset: reset };
+    /* A suggested question was tapped: say its entry. */
+    function entryById(id) {
+      var e = bankIndex && bankIndex.entries[id];
+      return e ? entry(e, e.q, false, e.q) : nothingLeft();
+    }
+
+    return { ask: ask, pick: pick, theme: theme, entry: entryById, reset: reset, setBank: setBank };
   }
 
   var api = { create: create };

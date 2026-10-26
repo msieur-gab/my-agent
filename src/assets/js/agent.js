@@ -1,5 +1,6 @@
 /* The home page conversation, wired together:
-     match.js    understands what was typed (search, typos, small talk, commands)
+     match.js    understands what was typed (typos, commands, the list)
+     bank.js     finds the entry of the question bank that answers, by words or by meaning
      respond.js  decides the reply, as one of four templates
      chat.js     shows it, always in the same order
      send.js     the form that reaches me
@@ -15,6 +16,15 @@
   window.SITE_BASE = site.basePath || '';
   var brain = Respond.create(data);
   var lastSaid = ''; /* what the send form is filled with when the visitor accepts the invitation */
+
+  /* The bank: its entries and their vectors. Then the model, after the page has settled, so that a
+     question typed early can be matched by meaning; until then, by words. */
+  var bankReady = fetch(window.SITE_BASE + '/bank.json').then(function (r) { return r.json(); }).then(function (bank) {
+    var model = bank.vectors && window.Bank ? Bank.loader(window.SITE_BASE) : null;
+    brain.setBank(bank, function (text) { return model ? model.load().then(function (e) { return e(text); }) : Promise.reject(); });
+    if (model) setTimeout(function () { model.load(); }, 1200);
+    return bank;
+  }).catch(function (e) { console.warn('bank unavailable', e); });
 
   /* Counting: at most once per visit, no identifier, nothing stored on the device. */
   var counted = {};
@@ -39,7 +49,7 @@
     invite: site.softInvite,
     onAsk: function (text) {
       count('question', text);
-      round(text, 'You asked', function () { return brain.ask(text); });
+      round(text, 'You asked', function () { return bankReady.then(function () { return brain.ask(text); }); });
     },
     onChoice: choose,
     onForm: function (turn, text) { Send.open(turn, text, { email: site.email }); },
@@ -61,6 +71,7 @@
       count('theme', item.theme);
       return round(said, 'You picked', function () { return brain.theme(item.theme); });
     }
+    if (item.entry !== undefined) return round(said, 'You picked', function () { return brain.entry(item.entry); });
     round(said, 'You picked', function () { return brain.pick(item.pick); });
   }
 

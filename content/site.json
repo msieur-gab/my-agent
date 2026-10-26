@@ -50,6 +50,7 @@
     "readStory": "Read the full story →",
     "readNote": "Read the note →",
     "heard": "Why this one: you mentioned",
+    "read": "I read that as: {q}",
     "also": "Also on this",
     "askBack": "I have a few pieces on that. Which is closest to your situation?",
     "open": "Show me →",
@@ -67,7 +68,7 @@
     "greeting": "Hello. Tell me what you're stuck on, and I'll show you what I did when I met the same question.",
     "thanks": "You're welcome.",
     "who": "I'm Gabriel Baude, a designer and creative technologist in Munich, working across Europe. Ask me about a problem and I'll answer with the work.",
-    "how": "No language model is writing this. The page matches your question against my own projects and notes and shows you the closest piece, in my words. When nothing fits, it says so.",
+    "how": "No language model is writing this. A small model in your browser compares your question with the ones I've written and the page says my reply to the closest one. When nothing fits, it says so.",
     "what": "Anything you'd ask before starting a project. These are the questions I hear most.",
     "contact": "Write to me here. I read and answer every message myself."
   }

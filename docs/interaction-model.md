@@ -39,6 +39,13 @@ Everything stays extractive: every sentence the page says is written in `content
     for words of five letters or more, two for nine or more. Project names too.
 11. **It never dead-ends.** No match gives the invitation to send the question, and the topics.
 
+## The bank (26 October 2026)
+
+A typed question is answered from `content/bank.md`, one file: the question, other ways of asking it,
+my reply, where it leads. Matched by meaning (MiniLM in the browser) after a word check; the pieces'
+keywords no longer decide. Three bands: answer, "the closest I have", no answer. The reply says how
+it read the question when the phrasing differs ("I read that as: …"). `docs/authoring-eval.md` has the numbers.
+
 ## The four reply templates
 
 Every reply is one of four templates, and all four are shown the same way.
@@ -55,9 +62,10 @@ what the agent says → why ("you mentioned …") → cards → form → link �
 
 ## How the code is split
 
-- `match.js` understands what was typed: search with an evidence rule, typos, small talk, commands.
+- `match.js` understands what was typed: typos, commands, the list; its keyword search is kept for tests.
+- `bank.js` finds the bank entry that answers, by words or by meaning.
 - `respond.js` decides the reply and returns it as plain data, one of the four templates. No page code,
-  so `tests/check.js` runs whole conversations against it.
+  so `tests/talk.mjs` runs whole conversations against it.
 - `chat.js` shows any reply in the fixed order above and looks after the question field. It knows
   nothing about the content.
 - `send.js` is the form. `intro.js` is the opening. `agent.js` wires them together.

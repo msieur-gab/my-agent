@@ -142,6 +142,29 @@ def with_base(text):
     return re.sub(r'\b(href|src|action)="/(?!/)', lambda m: f'{m.group(1)}="{BASE}/', text)
 
 
+def load_bank():
+    """content/bank.md → the list of entries the agent can reply with. See the top of that file.
+    An entry: {id, q, also: [..], say: [..], leads, section, theme}. `theme` is the section's {id}."""
+    entries, section, theme, entry = [], "", "", None
+    for line in (CONTENT / "bank.md").read_text(encoding="utf-8").splitlines():
+        s = line.rstrip()
+        if s.startswith("## "):
+            m = re.match(r"^## (.*?)\s*(?:\{([\w-]+)\})?\s*$", s)
+            section, theme, entry = m.group(1).strip(), m.group(2) or "", None
+        elif s.startswith("### "):
+            entry = {"id": len(entries), "q": s[4:].strip(), "also": [], "say": [], "leads": "", "section": section, "theme": theme}
+            entries.append(entry)
+        elif entry is None or s.startswith("#"):
+            continue
+        elif re.match(r"^\s*-\s+", s):
+            entry["also"].append(re.sub(r"^\s*-\s+", "", s).strip())
+        elif s.startswith("say:"):
+            entry["say"].append(s[4:].strip())
+        elif s.startswith("leads:"):
+            entry["leads"] = s[6:].strip()
+    return entries
+
+
 def load_pieces(folder, kind):
     pieces = []
     for f in sorted((CONTENT / folder).glob("*.md")):
@@ -267,7 +290,7 @@ def build_home(site, work, notes):
     ld = {"@context": "https://schema.org", "@type": "Person", "name": site["name"],
           "jobTitle": site["role"], "url": site["baseUrl"], "address": site["location"]}
     return page(site, site["name"], body, description=site["opening"], path="/",
-                scripts=["/assets/js/match.js", "/assets/js/redact.js", "/assets/js/respond.js", "/assets/js/chat.js",
+                scripts=["/assets/js/match.js", "/assets/js/bank.js", "/assets/js/redact.js", "/assets/js/respond.js", "/assets/js/chat.js",
                          "/assets/js/send.js", "/assets/js/intro.js", "/assets/js/agent.js"],
                 json_ld=ld, body_class="is-home")
 
@@ -381,13 +404,20 @@ def main():
     write("how-this-site-works/index.html", build_plain_page(site, "how-this-site-works"))
 
     write("answers.json", json.dumps({"pieces": [public_piece(p) for p in work + notes]}, ensure_ascii=False, indent=1))
+    # The bank, without vectors. `node build/embed.mjs` adds them (same file); without them the page matches by words only.
+    bank = load_bank()
+    missing = sorted({x["leads"] for x in bank if x["leads"] and ":" not in x["leads"]
+                      and x["leads"] not in ("invite", "all", "contact", "more")} - {p["slug"] for p in work + notes})
+    if missing:
+        print(f"bank: {len(missing)} entries lead to pieces that are not on the site: {', '.join(missing)}")
+    write("bank.json", json.dumps({"entries": bank, "model": None, "vectors": None}, ensure_ascii=False))
     urls = ["/", "/work/", "/notes/", "/how-this-site-works/"] + [p["url"] for p in work + notes]
     write("sitemap.xml", build_sitemap(site, urls))
     write("robots.txt", f"User-agent: *\nAllow: /\n\nSitemap: {site['baseUrl'].rstrip('/')}/sitemap.xml\n")
     write("llms.txt", build_llms(site, work, notes))
     write(".nojekyll", "")
 
-    print(f"Built {len(work)} work pieces, {len(notes)} notes → {OUT.relative_to(ROOT)}/")
+    print(f"Built {len(work)} work pieces, {len(notes)} notes, {len(bank)} bank entries → {OUT.relative_to(ROOT)}/")
 
 
 if __name__ == "__main__":

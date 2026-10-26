@@ -1,0 +1,13 @@
+{
+  "name": "my-agent",
+  "private": true,
+  "description": "Build-time embedding of the question bank. The site itself has no dependencies; the browser loads the same vendored model from src/assets/.",
+  "scripts": {
+    "build": "python3 build/build.py && node build/embed.mjs",
+    "eval": "node tests/eval.js",
+    "check": "node tests/check.js"
+  },
+  "devDependencies": {
+    "@xenova/transformers": "2.17.2"
+  }
+}

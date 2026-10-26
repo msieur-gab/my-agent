@@ -37,7 +37,13 @@
        getReply() is called when its turn comes, so replies are worked out in the order they were asked. */
     function round(said, label, getReply) {
       queue = queue.then(function () {
-        return show(turn(said, label), getReply());
+        var t = turn(said, label);
+        var reply = getReply();
+        if (!reply || typeof reply.then !== 'function') return show(t, reply);
+        /* The reply takes a moment (the model is reading): three dots, like someone about to answer. */
+        var dots = el('p', { class: 'say wait', 'aria-label': 'Thinking' }, [el('span'), el('span'), el('span')]);
+        t.appendChild(dots);
+        return reply.then(function (r) { dots.remove(); return show(t, r); }, function (e) { dots.remove(); throw e; });
       }).catch(function (e) { console.error(e); });
       return queue;
     }
